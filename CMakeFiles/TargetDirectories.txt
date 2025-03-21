@@ -1,0 +1,3 @@
+/home/toor/Documents/testVideo/CMakeFiles/testVideo.dir
+/home/toor/Documents/testVideo/CMakeFiles/edit_cache.dir
+/home/toor/Documents/testVideo/CMakeFiles/rebuild_cache.dir
