@@ -17,7 +17,7 @@ PID::~PID()
 {
 }
 
-float PID::update(float error) {
+float PID::update(float const error) {
 
     //float error = target - measure;
     long time = micros();

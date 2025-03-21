@@ -5,26 +5,40 @@
 #include "MotorControl.hpp"
 #include "PID.hpp"
 
-
-
 uint8_t lastphase[3] = {0, 0, 0};
-int Position[3] = {0, 0, 0};
-int ENC_A[3] = {21,0,0};
-int ENC_B[3] = {22,0,0};
-
+long Position[3] = {0, 0, 0};
+int ENC_A[3] = {21, 0, 0};
+int ENC_B[3] = {22, 0, 0};
 
 MotorControl driverA = MotorControl();
 MotorControl driverB = MotorControl(0x0e);
-
-typedef struct motorStruct {
+PID dirPID = PID(0.01,0.02);
+typedef struct motorStruct
+{
     MotorControl driver;
     bool side;
 } motorType;
-motorType motorList[3] = { motorType({driverA,MOTORA}),motorType({driverA,MOTORB}),motorType({driverB,MOTORA})};
 
 
 
 
+motorType motorList[3] ;//={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
+
+void motorListInit(motorType  motorlist[3]) {
+    motorType motor1;
+    motor1.driver = driverA;
+    motor1.side = MOTORA;
+    motorlist[0] = motor1;
+    motorType motor2;
+    motor2.driver = driverA;
+    motor2.side = MOTORB;
+    motorlist[0] = motor2;
+    motorType motor3;
+    motor3.driver = driverB;
+    motor3.side = MOTORA;
+    motorlist[0] = motor3;
+    return;
+}
 
 uint8_t identifier_phase(int pinA, int pinB)
 {
@@ -45,28 +59,30 @@ void generalEncoderHandler(uint motor)
     }
     lastphase[motor] = phase;
 }
-void EncoderHandler0() {generalEncoderHandler(0);}
-void EncoderHandler1() {generalEncoderHandler(1);}
-void EncoderHandler2() {generalEncoderHandler(2);}
-
+void EncoderHandler0() { generalEncoderHandler(0); }
+void EncoderHandler1() { generalEncoderHandler(1); }
+void EncoderHandler2() { generalEncoderHandler(2); }
 
 int main(int argc, char **argv)
 {
+    motorListInit(motorList);
+    wiringPiSetup();
+    for (int i = 0; i < 3; i++)
+    {
+        pinMode(ENC_A[i], INPUT);
+        pinMode(ENC_B[i], INPUT);
+        lastphase[i] = identifier_phase(ENC_A[i], ENC_B[i]);
+    }
+    wiringPiISR(ENC_A[0], INT_EDGE_BOTH, &EncoderHandler0);
+    wiringPiISR(ENC_B[0], INT_EDGE_BOTH, &EncoderHandler0);
+    wiringPiISR(ENC_A[1], INT_EDGE_BOTH, &EncoderHandler1);
+    wiringPiISR(ENC_B[1], INT_EDGE_BOTH, &EncoderHandler1);
+    wiringPiISR(ENC_A[2], INT_EDGE_BOTH, &EncoderHandler2);
+    wiringPiISR(ENC_B[2], INT_EDGE_BOTH, &EncoderHandler2);
 
-        for (int i =0;i<3;i++) {
-        pinMode(ENC_A[i],INPUT);
-        pinMode(ENC_B[i],INPUT);
-        lastphase[i]=identifier_phase(ENC_A[i],ENC_B[i]);
-        }
-        wiringPiISR(ENC_A[0],INT_EDGE_BOTH, &EncoderHandler0 );
-        wiringPiISR(ENC_B[0],INT_EDGE_BOTH, &EncoderHandler0 );
-        wiringPiISR(ENC_A[1],INT_EDGE_BOTH, &EncoderHandler1 );
-        wiringPiISR(ENC_B[1],INT_EDGE_BOTH, &EncoderHandler1 );
-        wiringPiISR(ENC_A[2],INT_EDGE_BOTH, &EncoderHandler2 );
-        wiringPiISR(ENC_B[2],INT_EDGE_BOTH, &EncoderHandler2 );
-    
     int width = 1280;
     int height = 720;
+    
     int totalpixel = width * height;
     float validlock = 0.02;
 
@@ -93,11 +109,10 @@ int main(int argc, char **argv)
 
     int ch = 0;
     bool correct_reading = false;
+    motorList[0].driver.setSpeed(motorList[0].side,255);
+    motorList[1].driver.setSpeed(motorList[1].side,255);
 
-
-   
-
-        while (ch != 27)
+    while (ch != 27)
     {
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
@@ -130,11 +145,14 @@ int main(int argc, char **argv)
         {
             correct_reading = true;
         }
-#ifdef DEBUG
+
+
+        bool correct_blue = blue_moment.m00 / totalpixel > validlock;
+        bool correct_red = red_moment.m00 / totalpixel > validlock;
         cv::Point bary_red = cv::Point(std::floor(x_red), std::floor(y_red));
         cv::Point bary_blue = cv::Point(std::floor(x_blue), std::floor(y_blue));
-        cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (red_moment.m00 / totalpixel > validlock ? -1 : 5));
-        cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (blue_moment.m00 / totalpixel > validlock ? -1 : 5)); // BGR
+        cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (correct_red ? -1 : 5));
+        cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (correct_blue ? -1 : 5)); // BGR
         // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
         /*cv::bitwise_and(image,image,out_red,mask_red);
         cv::bitwise_and(image,image,out_blue,mask_blue);*/
@@ -146,14 +164,8 @@ int main(int argc, char **argv)
 
         cv::imshow("Video2", image);
         ch = cv::waitKey(5);
-#endif
-        
-
-
-
-
-
-
+        float res = dirPID.update(width/2.0f - x_red);
+        motorList[2].driver.setSpeed(motorList[2].side,std::floor(res));
 
 
 
