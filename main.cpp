@@ -5,8 +5,26 @@
 #include "MotorControl.hpp"
 #include "PID.hpp"
 
-uint8_t lastphase;
-int Position = 0;
+
+
+uint8_t lastphase[3] = {0, 0, 0};
+int Position[3] = {0, 0, 0};
+int ENC_A[3] = {21,0,0};
+int ENC_B[3] = {22,0,0};
+
+
+MotorControl driverA = MotorControl();
+MotorControl driverB = MotorControl(0x0e);
+
+typedef struct motorStruct {
+    MotorControl driver;
+    bool side;
+} motorType;
+motorType motorList[3] = { motorType({driverA,MOTORA}),motorType({driverA,MOTORB}),motorType({driverB,MOTORA})};
+
+
+
+
 
 uint8_t identifier_phase(int pinA, int pinB)
 {
@@ -14,23 +32,39 @@ uint8_t identifier_phase(int pinA, int pinB)
     return LUT[2 * digitalRead(pinA) + digitalRead(pinB)];
 }
 
-void EncoderHandler()
+void generalEncoderHandler(uint motor)
 {
-    // printf("A");
-    phase = identifier_phase(ENC_A, ENC_B);
-    if (phase == (lastphase + 1) % 4)
+    uint phase = identifier_phase(ENC_A[motor], ENC_B[motor]);
+    if (phase == (lastphase[motor] + 1) % 4)
     {
-        Position++;
+        Position[motor]++;
     }
-    else if (phase == (lastphase - 1) % 4)
+    else if (phase == (lastphase[motor] - 1) % 4)
     {
-        Position--;
+        Position[motor]--;
     }
-    lastphase = phase;
+    lastphase[motor] = phase;
 }
+void EncoderHandler0() {generalEncoderHandler(0);}
+void EncoderHandler1() {generalEncoderHandler(1);}
+void EncoderHandler2() {generalEncoderHandler(2);}
+
 
 int main(int argc, char **argv)
 {
+
+        for (int i =0;i<3;i++) {
+        pinMode(ENC_A[i],INPUT);
+        pinMode(ENC_B[i],INPUT);
+        lastphase[i]=identifier_phase(ENC_A[i],ENC_B[i]);
+        }
+        wiringPiISR(ENC_A[0],INT_EDGE_BOTH, &EncoderHandler0 );
+        wiringPiISR(ENC_B[0],INT_EDGE_BOTH, &EncoderHandler0 );
+        wiringPiISR(ENC_A[1],INT_EDGE_BOTH, &EncoderHandler1 );
+        wiringPiISR(ENC_B[1],INT_EDGE_BOTH, &EncoderHandler1 );
+        wiringPiISR(ENC_A[2],INT_EDGE_BOTH, &EncoderHandler2 );
+        wiringPiISR(ENC_B[2],INT_EDGE_BOTH, &EncoderHandler2 );
+    
     int width = 1280;
     int height = 720;
     int totalpixel = width * height;
@@ -60,10 +94,10 @@ int main(int argc, char **argv)
     int ch = 0;
     bool correct_reading = false;
 
-    MotorControl driverA = MotorControl();
-    MotorControl driverB = MotorControl(0x0e);
 
-    while (ch != 27)
+   
+
+        while (ch != 27)
     {
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
@@ -96,6 +130,7 @@ int main(int argc, char **argv)
         {
             correct_reading = true;
         }
+#ifdef DEBUG
         cv::Point bary_red = cv::Point(std::floor(x_red), std::floor(y_red));
         cv::Point bary_blue = cv::Point(std::floor(x_blue), std::floor(y_blue));
         cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (red_moment.m00 / totalpixel > validlock ? -1 : 5));
@@ -111,6 +146,17 @@ int main(int argc, char **argv)
 
         cv::imshow("Video2", image);
         ch = cv::waitKey(5);
+#endif
+        
+
+
+
+
+
+
+
+
+
     }
     cam.stopVideo();
     cv::destroyAllWindows();
