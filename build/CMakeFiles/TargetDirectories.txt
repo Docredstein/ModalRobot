@@ -1,9 +1,0 @@
-/home/toor/Documents/testVideo/build/CMakeFiles/testVideo.dir
-/home/toor/Documents/testVideo/build/CMakeFiles/edit_cache.dir
-/home/toor/Documents/testVideo/build/CMakeFiles/rebuild_cache.dir
-/home/toor/Documents/testVideo/build/MotorControl/CMakeFiles/MotorControl.dir
-/home/toor/Documents/testVideo/build/MotorControl/CMakeFiles/edit_cache.dir
-/home/toor/Documents/testVideo/build/MotorControl/CMakeFiles/rebuild_cache.dir
-/home/toor/Documents/testVideo/build/PID/CMakeFiles/PID.dir
-/home/toor/Documents/testVideo/build/PID/CMakeFiles/edit_cache.dir
-/home/toor/Documents/testVideo/build/PID/CMakeFiles/rebuild_cache.dir
