@@ -1,6 +1,23 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: CMake on multiple platforms
+  # You may pin to the exact commit or the version.
+  # uses: pguyot/arm-runner-action@c6985ff3b578ceae452ad1dac02d85d57903b54f
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 on:
   push:
@@ -11,7 +28,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-
+    
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
@@ -39,13 +56,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
+    - uses: pguyot/arm-runner-action@v2
+      id: build_image
+      with:
+          base_image: raspios_lite:2022-04-04
+          commands: |
+          
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+
+  
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -60,9 +85,20 @@ jobs:
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
-
+    
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
+    - name: Compress the release image
+      if: github.ref == 'refs/heads/releng' || startsWith(github.ref, 'refs/tags/')
+      run: |
+        mv ${{ steps.build_image.outputs.image }} my-release-image.img
+        xz -0 -T 0 -v my-release-image.img
+    - name: Upload release image
+      uses: actions/upload-artifact@v2
+      if: github.ref == 'refs/heads/releng' || startsWith(github.ref, 'refs/tags/')
+      with:
+        name: Release image
+        path: my-release-image.img.xz
