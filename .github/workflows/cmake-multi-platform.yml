@@ -60,8 +60,23 @@ jobs:
       id: build_image
       with:
           base_image: raspios_lite:2022-04-04
-          commands: |
-          
+          commands: | 
+            apt install build-essential cmake git libcamera-dev libopencv-dev -y
+            git clone https://github.com/kbarni/LCCV.git 
+            cd LCCV 
+            mkdir build 
+            cd build 
+            cmake .. 
+            make 
+            make install
+            cd ..
+            cd ..
+            git clone https://github.com/WiringPi/WiringPi.git
+            cd WiringPi
+            ./build debian
+            mv debian-template/wiringpi-3.0-1.deb .
+            sudo apt install ./wiringpi-3.0-1.deb
+              
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
