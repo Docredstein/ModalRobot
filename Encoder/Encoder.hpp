@@ -1,7 +1,7 @@
 #pragma once
 #include <wiringPi.h>
 #include <stdint.h>
-#include <functional>
+
 class Encoder
 {
 private:

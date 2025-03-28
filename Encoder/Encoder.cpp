@@ -33,7 +33,11 @@ void Encoder::EncoderHandler() {
 
 void Encoder::init(void (*function)(void)) {
     this->externalHandler = function;
+
+    pinMode(pinA, INPUT);
+    pinMode(pinB, INPUT);
+    lastPhase = identifier_phase();
     wiringPiISR(pinA, INT_EDGE_BOTH, this->externalHandler);
     wiringPiISR(pinB, INT_EDGE_BOTH, this->externalHandler);
-    
+
 }
