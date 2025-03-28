@@ -12,7 +12,10 @@ int ENC_B[3] = {22, 0, 0};
 
 MotorControl driverA = MotorControl();
 MotorControl driverB = MotorControl(0x0e);
-PID dirPID = PID(0.01,0.02);
+PID dirPID = PID(0.01, 0.02);
+
+PID PIDmotor[3];
+float consigne[3] = {0,0,0};
 typedef struct motorStruct
 {
     MotorControl driver;
@@ -20,11 +23,10 @@ typedef struct motorStruct
 } motorType;
 
 
+motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
 
-
-motorType motorList[3] ;//={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
-
-void motorListInit(motorType  motorlist[3]) {
+void motorListInit(motorType motorlist[3])
+{
     motorType motor1;
     motor1.driver = driverA;
     motor1.side = MOTORA;
@@ -63,8 +65,21 @@ void EncoderHandler0() { generalEncoderHandler(0); }
 void EncoderHandler1() { generalEncoderHandler(1); }
 void EncoderHandler2() { generalEncoderHandler(2); }
 
+
+void MotorUpdate()
+{
+    
+
+}
+
+
+
 int main(int argc, char **argv)
 {
+    PIDmotor[0] = PID(0.01, 0.02);
+    PIDmotor[1] = PID(0.01, 0.02);
+    PIDmotor[2] = PID(0.01, 0.02);
+
     motorListInit(motorList);
     wiringPiSetup();
     for (int i = 0; i < 3; i++)
@@ -82,7 +97,7 @@ int main(int argc, char **argv)
 
     int width = 1280;
     int height = 720;
-    
+
     int totalpixel = width * height;
     float validlock = 0.02;
 
@@ -109,8 +124,8 @@ int main(int argc, char **argv)
 
     int ch = 0;
     bool correct_reading = false;
-    motorList[0].driver.setSpeed(motorList[0].side,255);
-    motorList[1].driver.setSpeed(motorList[1].side,255);
+    motorList[0].driver.setSpeed(motorList[0].side, 255);
+    motorList[1].driver.setSpeed(motorList[1].side, 255);
 
     while (ch != 27)
     {
@@ -146,7 +161,6 @@ int main(int argc, char **argv)
             correct_reading = true;
         }
 
-
         bool correct_blue = blue_moment.m00 / totalpixel > validlock;
         bool correct_red = red_moment.m00 / totalpixel > validlock;
         cv::Point bary_red = cv::Point(std::floor(x_red), std::floor(y_red));
@@ -164,11 +178,8 @@ int main(int argc, char **argv)
 
         cv::imshow("Video2", image);
         ch = cv::waitKey(5);
-        float res = dirPID.update(width/2.0f - x_red);
-        motorList[2].driver.setSpeed(motorList[2].side,std::floor(res));
-
-
-
+        float res = dirPID.update(width / 2.0f - x_red);
+        motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
     }
     cam.stopVideo();
     cv::destroyAllWindows();
