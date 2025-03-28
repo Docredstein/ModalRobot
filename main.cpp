@@ -6,8 +6,7 @@
 #include "PID.hpp"
 #include "Encoder.hpp"
 
-#define MOTOR_CONSTANT   0
- //255/300
+#define MOTOR_CONSTANT   255/300
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
@@ -68,8 +67,8 @@ motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MO
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID(0.3,0.1,0.01);
-    PIDmotor[1] = PID(0.5,0.5,0.1);
+    PIDmotor[0] = PID();
+    PIDmotor[1] = PID(0.5,0.1);
     PIDmotor[2] = PID(0.5,0.5);
     motorType motor1;
     motor1.driver = &driverA;
@@ -91,7 +90,7 @@ void* MotorUpdateThread(void * argvvv)
 {
     while(true) {
         for (int i=0;i<3;i++) {
-            float speedVal =  PIDmotor[i].update(consigne[i]- speed[i]);
+            float speedVal =  PIDmotor[i].update(speed[i]-consigne[i]);
             speedVal = speedVal+ consigne[i]*MOTOR_CONSTANT;
             //std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
