@@ -14,19 +14,36 @@ int ENC_B[3] = {22, 0, 0};
 
 Encoder Encoderlist[3];
 
-void EncoderHandler1() { Encoderlist[0]->EncoderHandler(); };
-void EncoderHandler2() { Encoderlist[1]->EncoderHandler(); };
-void EncoderHandler3() { Encoderlist[2]->EncoderHandler(); };
+void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
+void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
+void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
+
+volatile float speed[3] = {0};
+volatile long long lastPos[3] = {0};
+volatile long lastTime = 0;
+void * getSpeed( void * vargp)
+{
+    while (true)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            speed[i] = (Encoderlist[i].pos - lastPos[i]) / ((micros() - lastTime)*1.0f);
+            lastPos[i] = Encoderlist[i].pos;
+        }
+        lastTime = micros();
+        delay(100);
+    }
+}
 
 void EncoderInit()
 {
-    for (int i =0;i<3;i++) {
-    EncoderList[i] = Encoder(ENC_A[i],ENC_B[i]);
+    for (int i = 0; i < 3; i++)
+    {
+        Encoderlist[i] = Encoder(ENC_A[i], ENC_B[i]);
     }
     Encoderlist[0].init(&EncoderHandler1);
     Encoderlist[1].init(&EncoderHandler2);
     Encoderlist[2].init(&EncoderHandler3);
-
 }
 
 MotorControl driverA = MotorControl();
@@ -34,7 +51,7 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {0, 0, 0};
+float consigne[3] = {25, 0, 0};
 typedef struct motorStruct
 {
     MotorControl driver;
@@ -87,18 +104,29 @@ void EncoderHandler0() { generalEncoderHandler(0); }
 void EncoderHandler1() { generalEncoderHandler(1); }
 void EncoderHandler2() { generalEncoderHandler(2); }
 */
-void MotorUpdate()
+
+
+void* MotorUpdateThread(void * argvvv)
 {
+    while(true) {
+        for (int i=0;i<3;i++) {
+            float speedVal =  PIDmotor[i].update(consigne[i]- speed[i]);
+            motorList[i].driver.setSpeed(motorList[i].side, std::floor(speedVal));
+        }
+    }
+    return;
 }
 
 int main(int argc, char **argv)
 {
-    
-
+    pthread_t speedThread;
+    pthread_t motorThread;
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
 
+    pthread_create(&speedThread,NULL,&getSpeed,NULL);
+    pthread_create(&motorThread,NULL,&MotorUpdateThread,NULL);
     int width = 1280;
     int height = 720;
 
@@ -187,6 +215,9 @@ int main(int argc, char **argv)
     }
     cam.stopVideo();
     cv::destroyAllWindows();
+
+    pthread_join(speedThread,NULL);
+    pthread_join(motorThread,NULL);
 
     return 0;
 }

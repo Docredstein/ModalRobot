@@ -7,6 +7,10 @@ Encoder::Encoder(int pinA,int pinB) {
     
 
 }
+Encoder::Encoder() {
+    this->pinA = 0;
+    this->pinB =1;
+}
 Encoder::~Encoder() {
 
 }
