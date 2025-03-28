@@ -24,6 +24,7 @@ float PID::update(float const error) {
     if (m_Ki!=0) {
     m_accumulator+=error*(time-m_lastMicros)*1e-6;
     m_accumulator = (m_accumulator>m_maxAccumulator)?m_maxAccumulator:m_accumulator;
+    m_accumulator = (m_accumulator<-m_maxAccumulator)?-m_maxAccumulator:m_accumulator;
     }
     float out = m_Kp*error+m_Ki*m_accumulator+m_Kd*(error - m_lastError)/(time-m_lastMicros);
     m_lastError=error;

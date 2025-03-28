@@ -12,7 +12,7 @@ private:
     bool    m_initialized;
     float   m_maxAccumulator;
 public:
-    PID(float kp=1.0f,float ki =0.0f, float kd=0.0f,float maxAccumulator=20000);
+    PID(float kp=1.0f,float ki =0.0f, float kd=0.0f,float maxAccumulator=1000);
     ~PID();
    float update(float error);
 };

@@ -37,7 +37,7 @@ void MotorControl::setSpeed(bool Motor,int speed) {
             this->_M1_direction = 1;
             speed = speed > 255 ? 255 : speed;
             this->_speed1 = speed;
-        } else if (speed < 0) {
+        } else  {
             this->_M1_direction = 0;
             speed = speed < -255 ? 255 : -(speed);
             this->_speed1 = speed;
@@ -47,14 +47,15 @@ void MotorControl::setSpeed(bool Motor,int speed) {
             this->_M2_direction = 1;
             speed = speed > 255 ? 255 : speed;
             this->_speed2 = speed;
-        } else if (speed < 0) {
+        } else {
             this->_M2_direction = 0;
             speed = speed < -255 ? 255 : -(speed);
             this->_speed2 = speed;
         }
     }
     this->setDirection(this->_M1_direction,this->_M2_direction);
-    uint8_t Data[2] = {this->_speed1,this->_speed2};
+    //uint8_t Data[2] = {this->_speed1,this->_speed2};
     wiringPiI2CWriteReg16(this->m_fd,0x82,((uint16_t)this->_speed1)<<8|this->_speed2);
-    //printf("a : %i, b:%i , value : %i\n",this->_speed1,this->_speed2,((uint16_t)this->_speed1)<<8|this->_speed2);
+    //printf("a : %i, b:%i , value : %04x\n",this->_speed1,this->_speed2,((uint16_t)this->_speed1)<<8|this->_speed2);
+
 }

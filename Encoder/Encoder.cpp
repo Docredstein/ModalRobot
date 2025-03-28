@@ -43,5 +43,5 @@ void Encoder::init(void (*function)(void)) {
     lastPhase = identifier_phase();
     wiringPiISR(pinA, INT_EDGE_BOTH, this->externalHandler);
     wiringPiISR(pinB, INT_EDGE_BOTH, this->externalHandler);
-
+    
 }
