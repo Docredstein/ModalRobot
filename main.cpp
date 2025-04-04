@@ -6,13 +6,13 @@
 #include "PID.hpp"
 #include "Encoder.hpp"
 
-#define MOTOR_CONSTANT   255/300
+#define MOTOR_CONSTANT   255/(4*300)
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
 */
-int ENC_B[3] = {21, 1, 3};
-int ENC_A[3] = {22, 24, 4};
+int ENC_A[3] = {21, 1, 3};
+int ENC_B[3] = {22, 24, 4};
 float lastCommandAfterPID[3] = {0};
 Encoder Encoderlist[3];
 
@@ -55,11 +55,12 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {300, 250, 0};
+float consigne[3] = {300, 250, 250};
 typedef struct motorStruct
 {
     MotorControl * driver;
     bool side;
+    bool sens;
 } motorType;
 
 motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
@@ -67,20 +68,23 @@ motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MO
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID();
-    PIDmotor[1] = PID(0.5,0.1);
-    PIDmotor[2] = PID(0.5,0.5);
+    PIDmotor[0] = PID(0.2,0.5,0,255);
+    PIDmotor[1] = PID(0.2,0.5,0,255);
+    PIDmotor[2] = PID(0.2,0.5,0,255);
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
+    motor1.sens = 0;
     motorlist[0] = motor1;
     motorType motor2;
     motor2.driver = &driverA;
     motor2.side = MOTORB;
+    motor2.sens = 1;
     motorlist[1] = motor2;
     motorType motor3;
     motor3.driver = &driverB;
-    motor3.side = MOTORA;
+    motor3.side = MOTORB;
+    motor3.sens = 1;
     motorlist[2] = motor3;
     return;
 }
@@ -90,11 +94,11 @@ void* MotorUpdateThread(void * argvvv)
 {
     while(true) {
         for (int i=0;i<3;i++) {
-            float speedVal =  PIDmotor[i].update(speed[i]-consigne[i]);
+            float speedVal =  PIDmotor[i].update(consigne[i]-speed[i]);
             speedVal = speedVal+ consigne[i]*MOTOR_CONSTANT;
             //std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
-            motorList[i].driver->setSpeed(motorList[i].side, std::floor(speedVal));
+            motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens?-1:1)* std::floor(speedVal));
             delay(100);
         }
     }
@@ -108,6 +112,28 @@ int main(int argc, char **argv)
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
+
+    #ifdef WHATTHEMOTORDOIN
+    while (true) {
+        std::cout<<"A"<<std::endl;
+        motorList[0].driver->setSpeed(motorList[0].side, 255);
+        motorList[1].driver->setSpeed(motorList[1].side, 255);
+        delay(10000);
+        std::cout<<"B"<<std::endl;
+        motorList[0].driver->setSpeed(motorList[0].side, 255);
+        motorList[1].driver->setSpeed(motorList[1].side, -255);
+        delay(10000);
+        std::cout<<"C"<<std::endl;
+        motorList[0].driver->setSpeed(motorList[0].side, -255);
+        motorList[1].driver->setSpeed(motorList[1].side, 255);
+        delay(10000);
+        std::cout<<"D"<<std::endl;
+        motorList[0].driver->setSpeed(motorList[0].side, -255);
+        motorList[1].driver->setSpeed(motorList[1].side, -255);
+        delay(10000);
+    }
+    #endif
+
 
     pthread_create(&speedThread,NULL,&getSpeed,NULL);
     pthread_create(&motorThread,NULL,&MotorUpdateThread,NULL);
@@ -198,7 +224,7 @@ int main(int argc, char **argv)
         //motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
         std::cout<<"-----------------------"<<std::endl;
         for (int i=0;i<3;i++) {
-            std::cout<<i<<" : POS="<<Encoderlist[i].pos <<" ;SPEED=" <<speed[i]<<" ;PID="<<std::floor(lastCommandAfterPID[i])<<std::endl;
+            std::cout<<i<<" : POS="<<Encoderlist[i].pos <<" ;SPEED=" <<speed[i]<<" ;PID="<<std::floor(lastCommandAfterPID[i])<<" ;error:"<<consigne[i]-speed[i]<<std::endl;
         }
     }
     cam.stopVideo();

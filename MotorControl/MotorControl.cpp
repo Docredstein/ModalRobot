@@ -25,7 +25,7 @@ MotorControl::~MotorControl()
 
 void MotorControl::setDirection(bool dirA, bool dirB) {
     
-    uint8_t DirLut[4] = {0x0a,0x05,0x06,0x09};
+    uint8_t DirLut[4] = {0x0a,0x06,0x09,0x05};
     //uint8_t Data[2] = {DirLut[(2*dirA+dirB)],0};
     //wiringPiI2CWriteBlockData(this->I2C_Addr,0xaa,Data,2);
     wiringPiI2CWriteReg16(this->m_fd,0xaa,DirLut[(2*dirA+dirB)]);
