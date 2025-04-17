@@ -1,3 +1,0 @@
-/home/toor/Documents/testVideo/MotorControl/build/CMakeFiles/MotorControl.dir
-/home/toor/Documents/testVideo/MotorControl/build/CMakeFiles/edit_cache.dir
-/home/toor/Documents/testVideo/MotorControl/build/CMakeFiles/rebuild_cache.dir
