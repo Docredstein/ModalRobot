@@ -1,8 +1,9 @@
 #include "Holonomic.hpp"
 
+
 namespace Holonomic {
     constexpr float sqrt2 = 1.4142;//std::sqrtf(2);
-    /* Motor are set to turn positively in anti trigonomitric direction
+    /* Motor are set to turn positively in anti trigonometric direction
             1
            * *
           *   *
