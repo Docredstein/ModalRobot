@@ -5,6 +5,8 @@
 #include "MotorControl.hpp"
 #include "PID.hpp"
 #include "Encoder.hpp"
+#include <signal.h>
+
 
 #define MOTOR_CONSTANT   255/(4*300)
 /*
@@ -104,11 +106,23 @@ void* MotorUpdateThread(void * argvvv)
     }
     
 }
+pthread_t speedThread;
+pthread_t motorThread;
+void stop(int _) {
+    pthread_cancel(speedThread);
+    pthread_cancel(motorThread);
+    pthread_join(speedThread,NULL);
+    pthread_join(motorThread,NULL);
 
+    for (int i=0;i<3;i++) {
+        motorList[i].driver->setSpeed(motorList[i].side, 0);
+    }
+}
 int main(int argc, char **argv)
 {
-    pthread_t speedThread;
-    pthread_t motorThread;
+    signal(SIGINT, stop);
+
+   
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
@@ -230,13 +244,6 @@ int main(int argc, char **argv)
     cam.stopVideo();
     cv::destroyAllWindows();
   
-    pthread_cancel(speedThread);
-    pthread_cancel(motorThread);
-    pthread_join(speedThread,NULL);
-    pthread_join(motorThread,NULL);
 
-    for (int i=0;i<3;i++) {
-        motorList[i].driver->setSpeed(motorList[i].side, 0);
-    }
     return 0;
 }
