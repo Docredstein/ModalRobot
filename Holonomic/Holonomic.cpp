@@ -40,8 +40,8 @@ namespace Holonomic {
     void Convert(float input[3], float  output[3]) {
         float avant[3] = {0,1,-1};
         float droite[3] = {1,1/sqrt2,1/sqrt2};
-        float rotation[3] = {1,1,1};
-        truncate(input);
+        float rotation[3] = {-1,0,0};
+        normalize(input);
         float norme = 0;
         for (int i = 0;i<3;i++) {
             output[i]=avant[i]*input[0]+droite[i]*input[1]+rotation[i]*input[2];

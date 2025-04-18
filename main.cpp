@@ -8,7 +8,7 @@
 #include "Encoder.hpp"
 #include <signal.h>
 constexpr float pi = 3.1415;
-// #define NO_SHOW
+#define NO_SHOW
 #define MOTOR_CONSTANT 255 / (4 * 300)
 /*
 uint8_t lastphase[3] = {0, 0, 0};
@@ -78,9 +78,9 @@ motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MO
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID(0.5, 0.5, 0, 500);
-    PIDmotor[1] = PID(0.5, 0.5, 0, 500);
-    PIDmotor[2] = PID(0.5, 0.5, 0, 500);
+    PIDmotor[0] = PID(0.2, 0.5, 0, 500);
+    PIDmotor[1] = PID(0.2, 0.5, 0, 500);
+    PIDmotor[2] = PID(0.2, 0.5, 0, 500);
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
@@ -351,6 +351,7 @@ int main(int argc, char **argv)
             consigne[i] = (int)(400 * consigneMid[i]);
 
         }
+        std::cout<<angleDeg<<std::endl;
         std::cout<<"commande : ";
         printBuffer3(commande);
         std::cout<<"consigneMid : ";
