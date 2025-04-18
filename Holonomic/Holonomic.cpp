@@ -23,7 +23,7 @@ namespace Holonomic {
             norme += output[i]*output[i];
         }
         
-        norme = std::sqrtf(norme);
+        norme = std::sqrt(norme);
         if (norme>=1&&norme>0)  {
             for (int i =0;i<3;i++) {
                 output[i] = output[i]/norme;

@@ -7,8 +7,8 @@
 #include "Encoder.hpp"
 #include <signal.h>
 
-
-#define MOTOR_CONSTANT   255/(4*300)
+#define NO_SHOW
+#define MOTOR_CONSTANT 255 / (4 * 300)
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
@@ -25,20 +25,21 @@ void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
 volatile float speed[3] = {0};
 volatile long long lastPos[3] = {0};
 volatile long lastTime = 0;
-void * getSpeed( void * vargp)
+
+
+void *getSpeed(void *vargp)
 {
     while (true)
     {
         for (int i = 0; i < 3; i++)
         {
-            speed[i] = (Encoderlist[i].pos - lastPos[i])*1e6 / ((micros() - lastTime)*1.0f);
+            speed[i] = (Encoderlist[i].pos - lastPos[i]) * 1e6 / ((micros() - lastTime) * 1.0f);
             lastPos[i] = Encoderlist[i].pos;
         }
         lastTime = micros();
-        //delay(100);
+        // delay(100);
         delay(100);
     }
-
 }
 
 void EncoderInit()
@@ -57,10 +58,10 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {300, 250, 250};
+float consigne[3] = {0, 0, 0};
 typedef struct motorStruct
 {
-    MotorControl * driver;
+    MotorControl *driver;
     bool side;
     bool sens;
 } motorType;
@@ -70,9 +71,9 @@ motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MO
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID(0.2,0.5,0,255);
-    PIDmotor[1] = PID(0.2,0.5,0,255);
-    PIDmotor[2] = PID(0.2,0.5,0,255);
+    PIDmotor[0] = PID(0.2, 0.5, 0, 255);
+    PIDmotor[1] = PID(0.2, 0.5, 0, 255);
+    PIDmotor[2] = PID(0.2, 0.5, 0, 255);
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
@@ -91,30 +92,32 @@ void motorListInit(motorType motorlist[3])
     return;
 }
 
-
-void* MotorUpdateThread(void * argvvv)
+void *MotorUpdateThread(void *argvvv)
 {
-    while(true) {
-        for (int i=0;i<3;i++) {
-            float speedVal =  PIDmotor[i].update(consigne[i]-speed[i]);
-            speedVal = speedVal+ consigne[i]*MOTOR_CONSTANT;
-            //std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
+    while (true)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
+            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
+            // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
-            motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens?-1:1)* std::floor(speedVal));
+            motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
             delay(100);
         }
     }
-    
 }
 pthread_t speedThread;
 pthread_t motorThread;
-void stop(int _) {
+void stop(int _)
+{
     pthread_cancel(speedThread);
     pthread_cancel(motorThread);
-    pthread_join(speedThread,NULL);
-    pthread_join(motorThread,NULL);
+    pthread_join(speedThread, NULL);
+    pthread_join(motorThread, NULL);
 
-    for (int i=0;i<3;i++) {
+    for (int i = 0; i < 3; i++)
+    {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
 }
@@ -122,35 +125,34 @@ int main(int argc, char **argv)
 {
     signal(SIGINT, stop);
 
-   
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
 
-    #ifdef WHATTHEMOTORDOIN
-    while (true) {
-        std::cout<<"A"<<std::endl;
+#ifdef WHATTHEMOTORDOIN
+    while (true)
+    {
+        std::cout << "A" << std::endl;
         motorList[0].driver->setSpeed(motorList[0].side, 255);
         motorList[1].driver->setSpeed(motorList[1].side, 255);
         delay(10000);
-        std::cout<<"B"<<std::endl;
+        std::cout << "B" << std::endl;
         motorList[0].driver->setSpeed(motorList[0].side, 255);
         motorList[1].driver->setSpeed(motorList[1].side, -255);
         delay(10000);
-        std::cout<<"C"<<std::endl;
+        std::cout << "C" << std::endl;
         motorList[0].driver->setSpeed(motorList[0].side, -255);
         motorList[1].driver->setSpeed(motorList[1].side, 255);
         delay(10000);
-        std::cout<<"D"<<std::endl;
+        std::cout << "D" << std::endl;
         motorList[0].driver->setSpeed(motorList[0].side, -255);
         motorList[1].driver->setSpeed(motorList[1].side, -255);
         delay(10000);
     }
-    #endif
+#endif
 
-
-    pthread_create(&speedThread,NULL,&getSpeed,NULL);
-    pthread_create(&motorThread,NULL,&MotorUpdateThread,NULL);
+    pthread_create(&speedThread, NULL, &getSpeed, NULL);
+    pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
     int width = 1280;
     int height = 720;
 
@@ -167,9 +169,11 @@ int main(int argc, char **argv)
     cam.options->framerate = 60;
     cam.options->verbose = true;
 
-    // cv::namedWindow("red",cv::WINDOW_NORMAL);
-    // cv::namedWindow("blue",cv::WINDOW_NORMAL);
+// cv::namedWindow("red",cv::WINDOW_NORMAL);
+// cv::namedWindow("blue",cv::WINDOW_NORMAL);
+#ifndef NO_SHOW
     cv::namedWindow("Video2", cv::WINDOW_NORMAL);
+#endif
     std::cout << "Starting" << std::endl;
     cam.startVideo();
 
@@ -180,11 +184,16 @@ int main(int argc, char **argv)
 
     int ch = 0;
     bool correct_reading = false;
-    //motorList[0].driver->setSpeed(motorList[0].side, 255);
-    //motorList[1].driver->setSpeed(motorList[1].side, 255);
-
+    // motorList[0].driver->setSpeed(motorList[0].side, 255);
+    // motorList[1].driver->setSpeed(motorList[1].side, 255);
+#ifndef NO_SHOW
     while (ch != 27)
+#else
+    while (true)
+#endif
+
     {
+
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
         correct_reading = false;
@@ -192,7 +201,7 @@ int main(int argc, char **argv)
         double y_blue = 0;
         double x_red = 0;
         double y_red = 0;
-
+        bool followingblue = false;
         cam.getVideoFrame(image, 2000);
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
@@ -223,27 +232,38 @@ int main(int argc, char **argv)
         cv::Point bary_blue = cv::Point(std::floor(x_blue), std::floor(y_blue));
         cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (correct_red ? -1 : 5));
         cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (correct_blue ? -1 : 5)); // BGR
-        // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
-        /*cv::bitwise_and(image,image,out_red,mask_red);
-        cv::bitwise_and(image,image,out_blue,mask_blue);*/
-        // out = image*mask;
-        // cv::threshold(image,out,)
-        // cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
-        // cv::imshow("red",out_red);
-        // cv::imshow("blue",out_blue);
-
+                                                                                          // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
+                                                                                          /*cv::bitwise_and(image,image,out_red,mask_red);
+                                                                                          cv::bitwise_and(image,image,out_blue,mask_blue);*/
+                                                                                          // out = image*mask;
+                                                                                          // cv::threshold(image,out,)
+                                                                                          // cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
+                                                                                          // cv::imshow("red",out_red);
+                                                                                          // cv::imshow("blue",out_blue);
+#ifndef NO_SHOW
         cv::imshow("Video2", image);
         ch = cv::waitKey(5);
-        //float res = dirPID.update(width / 2.0f - x_red);
-        //motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
-        std::cout<<"-----------------------"<<std::endl;
-        for (int i=0;i<3;i++) {
-            std::cout<<i<<" : POS="<<Encoderlist[i].pos <<" ;SPEED=" <<speed[i]<<" ;PID="<<std::floor(lastCommandAfterPID[i])<<" ;error:"<<consigne[i]-speed[i]<<std::endl;
+#endif
+
+        // float res = dirPID.update(width / 2.0f - x_red);
+        // motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
+        std::cout << "-----------------------" << std::endl;
+        for (int i = 0; i < 3; i++)
+        {
+            std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << std::endl;
+        }
+
+        float angle = 0;
+        if (followingblue) {
+            angle = std::atan2(y_blue,x_blue-(width/2));
+        }
+        else {
+            angle = std::atan2(y_red,x_red-(width/2));
         }
     }
+
     cam.stopVideo();
     cv::destroyAllWindows();
-  
 
     return 0;
 }
