@@ -14,8 +14,8 @@ constexpr float pi = 3.1415;
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
 */
-int ENC_A[3] = {21, 1, 3};
-int ENC_B[3] = {22, 24, 4};
+int ENC_A[3] = {1, 21, 3};
+int ENC_B[3] = {24, 22, 4};
 float lastCommandAfterPID[3] = {0};
 Encoder Encoderlist[3];
 float angle = 0;
@@ -30,11 +30,12 @@ volatile long lastTime = 0;
 float translation = 0;
 float rotation = 0;
 float avance = 0;
+bool stopFlag = false;
 PID pidDroite = PID(1, 0.1, 0, 200);
 PID pidRot = PID(1, 0.1, 0, 200);
 void *getSpeed(void *vargp)
 {
-    while (true)
+    while (!stopFlag)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -45,6 +46,7 @@ void *getSpeed(void *vargp)
         // delay(100);
         delay(100);
     }
+    return nullptr;
 }
 
 void EncoderInit()
@@ -82,30 +84,38 @@ void motorListInit(motorType motorlist[3])
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
-    motor1.sens = 0;
-    motorlist[0] = motor1;
+    motor1.sens = 1;
+
     motorType motor2;
     motor2.driver = &driverA;
     motor2.side = MOTORB;
-    motor2.sens = 1;
-    motorlist[1] = motor2;
+    motor2.sens = 0;
+
     motorType motor3;
     motor3.driver = &driverB;
     motor3.side = MOTORB;
     motor3.sens = 1;
+
+    // swap
+    motorlist[0] = motor2;
+    motorlist[1] = motor1;
     motorlist[2] = motor3;
     return;
 }
 float CommandeAfterPidGlobal[2] = {0};
 void *DroiteUpdateThread(void *argv)
 {
-    CommandeAfterPidGlobal[0] = pidDroite.update(angleDeg - 90);
-    CommandeAfterPidGlobal[1] = pidRot.update(angleDeg - 90);
+    while (!stopFlag)
+    {
+        CommandeAfterPidGlobal[0] = pidDroite.update(90-angleDeg);
+        CommandeAfterPidGlobal[1] = pidRot.update(90-angleDeg);
+    }
+    return nullptr;
 }
 
 void *MotorUpdateThread(void *argv)
 {
-    while (true)
+    while (!stopFlag)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -117,6 +127,7 @@ void *MotorUpdateThread(void *argv)
             delay(100);
         }
     }
+    return nullptr;
 }
 pthread_t speedThread;
 pthread_t motorThread;
@@ -124,6 +135,7 @@ pthread_t consigneThread;
 
 void stop(int _)
 {
+    stopFlag = true;
     pthread_cancel(speedThread);
     pthread_cancel(motorThread);
     pthread_cancel(consigneThread);
@@ -135,6 +147,20 @@ void stop(int _)
     {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
+}
+void printBuffer3(float input[3]) {
+    for (int i = 0; i < 3; i++)
+    {
+        std::cout << input[i] << " ";
+    }
+    std::cout << std::endl;
+}
+void printBuffer3(int input[3]) {
+    for (int i = 0; i < 3; i++)
+    {
+        std::cout << input[i] << " ";
+    }
+    std::cout << std::endl;
 }
 int main(int argc, char **argv)
 {
@@ -165,7 +191,20 @@ int main(int argc, char **argv)
         delay(10000);
     }
 #endif
+    /*while (true)
+    {
+        for (int i = 0; i < 3; i++)
+        {
 
+                motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1)  * 100);
+                std::cout<<(motorList[i].sens ? -1 : 1)  * 100<<std::endl;
+
+
+            std::cout<<"Motor"<<i<<std::endl;
+
+        }
+        delay(1000);
+    }*/
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
@@ -285,21 +324,43 @@ int main(int argc, char **argv)
         ch = cv::waitKey(5);
 #endif
         angleDeg = angle * 180 / pi;
-        float commande[3] = {150};
-        if (std::abs(angleDeg - 90) > 30)
+        float commande[3] = {1,0,0};
+        commande[0] = 0.5;/*
+        if (std::abs(angleDeg - 90) < 30)
         {
-            commande[2] = CommandeAfterPidGlobal[1];
+            commande[2] = (angleDeg - 90)/90;//CommandeAfterPidGlobal[1];
             commande[3] = 0;
         }
         else
         {
             commande[2] = 0;
-            commande[3] = CommandeAfterPidGlobal[0];
+            commande[3] = (angleDeg - 90)/90; //CommandeAfterPidGlobal[0];
+        }*/
+       /*if (angleDeg - 90>0) {
+        commande[1] = -0.5; 
+       }else {
+        commande[1] = 0.5; 
+       }*/
+        float consigneMid[3] = {0};
+
+        Holonomic::Convert(commande, consigneMid);
+        
+        for (int i = 0; i < 3; i++)
+        {
+            consigne[i] = (int)(255 * consigneMid[i]);
+
         }
-        Holonomic::Convert(commande,consigne);
+        std::cout<<"commande : ";
+        printBuffer3(commande);
+        std::cout<<"consigneMid : ";
+        printBuffer3(consigneMid);
+        std::cout<<"consigne : ";
+        printBuffer3(consigne);
+
     }
 
     cam.stopVideo();
+    stop(0);
     cv::destroyAllWindows();
 
     return 0;
