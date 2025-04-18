@@ -16,9 +16,9 @@ include_directories(${LIBCAMERA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS})
 add_subdirectory(./MotorControl)
 add_subdirectory(./PID)
 add_subdirectory(./Encoder)
-
+add_subdirectory(./Holonomic)
 add_executable(testVideo main.cpp)
 
 #target_link_libraries(testVideo PRIVATE MotorControl)
-target_link_libraries(testVideo -llccv ${OpenCV_LIBS} MotorControl PID Encoder -lwiringPi)
+target_link_libraries(testVideo -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic -lwiringPi)
 
