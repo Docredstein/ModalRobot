@@ -78,9 +78,9 @@ motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MO
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID(0.2, 0.5, 0, 255);
-    PIDmotor[1] = PID(0.2, 0.5, 0, 255);
-    PIDmotor[2] = PID(0.2, 0.5, 0, 255);
+    PIDmotor[0] = PID(0.5, 0.5, 0, 500);
+    PIDmotor[1] = PID(0.5, 0.5, 0, 500);
+    PIDmotor[2] = PID(0.5, 0.5, 0, 500);
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
@@ -142,7 +142,7 @@ void stop(int _)
     pthread_join(speedThread, NULL);
     pthread_join(motorThread, NULL);
     pthread_join(consigneThread, NULL);
-
+    delay(1000);
     for (int i = 0; i < 3; i++)
     {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
@@ -341,13 +341,14 @@ int main(int argc, char **argv)
        }else {
         commande[1] = 0.5; 
        }*/
+      commande[2] = (90 - angleDeg)/90;
         float consigneMid[3] = {0};
 
         Holonomic::Convert(commande, consigneMid);
         
         for (int i = 0; i < 3; i++)
         {
-            consigne[i] = (int)(255 * consigneMid[i]);
+            consigne[i] = (int)(400 * consigneMid[i]);
 
         }
         std::cout<<"commande : ";

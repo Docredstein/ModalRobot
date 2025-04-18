@@ -38,7 +38,7 @@ namespace Holonomic {
     // Input : [avant,droite,rotation] ; Output : [motor1,motor2,motor3]
 
     void Convert(float input[3], float  output[3]) {
-        float avant[3] = {0,-1,1};
+        float avant[3] = {0,1,-1};
         float droite[3] = {1,1/sqrt2,1/sqrt2};
         float rotation[3] = {1,1,1};
         truncate(input);
