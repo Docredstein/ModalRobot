@@ -4,10 +4,11 @@
 #include <wiringPi.h>
 #include "MotorControl.hpp"
 #include "PID.hpp"
+#include "Holonomic.hpp"
 #include "Encoder.hpp"
 #include <signal.h>
-
-#define NO_SHOW
+constexpr float pi = 3.1415;
+// #define NO_SHOW
 #define MOTOR_CONSTANT 255 / (4 * 300)
 /*
 uint8_t lastphase[3] = {0, 0, 0};
@@ -17,7 +18,8 @@ int ENC_A[3] = {21, 1, 3};
 int ENC_B[3] = {22, 24, 4};
 float lastCommandAfterPID[3] = {0};
 Encoder Encoderlist[3];
-
+float angle = 0;
+float angleDeg = 0;
 void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
 void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
 void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
@@ -25,8 +27,11 @@ void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
 volatile float speed[3] = {0};
 volatile long long lastPos[3] = {0};
 volatile long lastTime = 0;
-
-
+float translation = 0;
+float rotation = 0;
+float avance = 0;
+PID pidDroite = PID(1, 0.1, 0, 200);
+PID pidRot = PID(1, 0.1, 0, 200);
 void *getSpeed(void *vargp)
 {
     while (true)
@@ -91,8 +96,14 @@ void motorListInit(motorType motorlist[3])
     motorlist[2] = motor3;
     return;
 }
+float CommandeAfterPidGlobal[2] = {0};
+void *DroiteUpdateThread(void *argv)
+{
+    CommandeAfterPidGlobal[0] = pidDroite.update(angleDeg - 90);
+    CommandeAfterPidGlobal[1] = pidRot.update(angleDeg - 90);
+}
 
-void *MotorUpdateThread(void *argvvv)
+void *MotorUpdateThread(void *argv)
 {
     while (true)
     {
@@ -109,12 +120,16 @@ void *MotorUpdateThread(void *argvvv)
 }
 pthread_t speedThread;
 pthread_t motorThread;
+pthread_t consigneThread;
+
 void stop(int _)
 {
     pthread_cancel(speedThread);
     pthread_cancel(motorThread);
+    pthread_cancel(consigneThread);
     pthread_join(speedThread, NULL);
     pthread_join(motorThread, NULL);
+    pthread_join(consigneThread, NULL);
 
     for (int i = 0; i < 3; i++)
     {
@@ -153,6 +168,7 @@ int main(int argc, char **argv)
 
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
+    pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
     int width = 1280;
     int height = 720;
 
@@ -230,20 +246,18 @@ int main(int argc, char **argv)
         bool correct_red = red_moment.m00 / totalpixel > validlock;
         cv::Point bary_red = cv::Point(std::floor(x_red), std::floor(y_red));
         cv::Point bary_blue = cv::Point(std::floor(x_blue), std::floor(y_blue));
+#ifndef NO_SHOW
         cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (correct_red ? -1 : 5));
         cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (correct_blue ? -1 : 5)); // BGR
-                                                                                          // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
-                                                                                          /*cv::bitwise_and(image,image,out_red,mask_red);
-                                                                                          cv::bitwise_and(image,image,out_blue,mask_blue);*/
-                                                                                          // out = image*mask;
-                                                                                          // cv::threshold(image,out,)
-                                                                                          // cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
-                                                                                          // cv::imshow("red",out_red);
-                                                                                          // cv::imshow("blue",out_blue);
-#ifndef NO_SHOW
-        cv::imshow("Video2", image);
-        ch = cv::waitKey(5);
 #endif
+            // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
+        /*cv::bitwise_and(image,image,out_red,mask_red);
+        cv::bitwise_and(image,image,out_blue,mask_blue);*/
+        // out = image*mask;
+        // cv::threshold(image,out,)
+        // cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
+        // cv::imshow("red",out_red);
+        // cv::imshow("blue",out_blue);
 
         // float res = dirPID.update(width / 2.0f - x_red);
         // motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
@@ -253,13 +267,36 @@ int main(int argc, char **argv)
             std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << std::endl;
         }
 
-        float angle = 0;
-        if (followingblue) {
-            angle = std::atan2(y_blue,x_blue-(width/2));
+        if (followingblue)
+        {
+            angle = std::atan2(height - y_blue, x_blue - (width / 2));
         }
-        else {
-            angle = std::atan2(y_red,x_red-(width/2));
+        else
+        {
+            angle = std::atan2(height - y_red, x_red - (width / 2));
         }
+#ifndef NO_SHOW
+        cv::line(image, cv::Point(width / 2, height), cv::Point(width / 2 + 1000 * std::cos(angle), height - 1000 * std::sin(angle)), cv::Scalar(0, 255, 0), 5);
+        std::cout << "angle=" << angle << " y red : " << y_red << std::endl;
+#endif
+
+#ifndef NO_SHOW
+        cv::imshow("Video2", image);
+        ch = cv::waitKey(5);
+#endif
+        angleDeg = angle * 180 / pi;
+        float commande[3] = {150};
+        if (std::abs(angleDeg - 90) > 30)
+        {
+            commande[2] = CommandeAfterPidGlobal[1];
+            commande[3] = 0;
+        }
+        else
+        {
+            commande[2] = 0;
+            commande[3] = CommandeAfterPidGlobal[0];
+        }
+        Holonomic::Convert(commande,consigne);
     }
 
     cam.stopVideo();
