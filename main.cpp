@@ -109,8 +109,10 @@ void *DroiteUpdateThread(void *argv)
 {
     while (!stopFlag)
     {
-        CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
-        CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));
+        /*CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
+        CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));*/
+        CommandeAfterPidGlobal[0] = pidDroite.update(90 - (angleDeg));
+        CommandeAfterPidGlobal[1] = pidRot.update(90 - (angleDeg));
     }
     return nullptr;
 }
@@ -355,6 +357,7 @@ int main(int argc, char **argv)
 
         if (std::abs(angleDeg - 90) < 10)
         {
+            commande[0] = 1;
             commande[1] = 0;
             commande[2] = 0;
         }
