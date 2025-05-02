@@ -73,7 +73,9 @@ typedef struct motorStruct
 } motorType;
 
 motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
-
+void clearScreen() {
+    std::cout << "\x1B[2J\x1B[H";
+}
 void motorListInit(motorType motorlist[3])
 {
 
@@ -134,20 +136,33 @@ pthread_t consigneThread;
 
 void stop(int _)
 {
+    clearScreen();
+    std::cout<<"==========Stopping=========="<<std::endl;
     stopFlag = true;
     pthread_cancel(speedThread);
+    std::cout<<".";
     pthread_cancel(motorThread);
+    std::cout<<".";
     pthread_cancel(consigneThread);
+    std::cout<<".";
     pthread_join(speedThread, NULL);
+    std::cout<<".";
     pthread_join(motorThread, NULL);
+    std::cout<<".";
     pthread_join(consigneThread, NULL);
-    delay(1000);
+    for (int i =0; i<10;i++) {
+        std::cout<<".";
+        delay(100);
+        
+    }
+    std::cout<<std::endl;
     for (int i = 0; i < 3; i++)
     {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
     exit(0);
 }
+
 void printBuffer3(float input[3])
 {
     for (int i = 0; i < 3; i++)
@@ -253,7 +268,7 @@ int main(int argc, char **argv)
 #endif
 
     {
-        std::cout << "\x1B[2J\x1B[H";
+        clearScreen();
 
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
