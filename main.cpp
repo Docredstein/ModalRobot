@@ -35,6 +35,11 @@ float avance = 0;
 bool stopFlag = false;
 PID pidDroite = PID(0.01, 0.001, 0, 200);
 PID pidRot = PID(0.01, 0.001, 0, 200);
+
+int sgn(float t) {
+    return ((t>=0) - (t<0));
+}
+
 void *getSpeed(void *vargp)
 {
     const int timedelay = 50;
@@ -146,7 +151,7 @@ void *MotorUpdateThread(void *argv)
         for (int i = 0; i < 3; i++)
         {
             float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
-            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT+ FRICTION_CONSTANT;
+            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT+ sgn(consigne[i])*FRICTION_CONSTANT;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
             motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
@@ -439,6 +444,8 @@ int main(int argc, char **argv)
         printBuffer3(consigneMid);
         std::cout << "consigne : ";
         printBuffer3(consigne);
+
+        delay(10);
     }
 
     cam.stopVideo();
