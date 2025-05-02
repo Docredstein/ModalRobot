@@ -5,7 +5,7 @@ constexpr float pi = 3.1415;
 #define MOTOR_KP 0.08 //0.04 on air
 #define MOTOR_KI 0.05 //0.015 on air
 #define MOTOR_KD 0
-#define MOTOR_INT_LIMIT 1000
+#define MOTOR_INT_LIMIT 5000
 #define SPEED_CONSTANT 300
 #define SPEED_AVERAGE_K 2
 

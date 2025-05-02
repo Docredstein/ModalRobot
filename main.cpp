@@ -151,7 +151,8 @@ void *MotorUpdateThread(void *argv)
         for (int i = 0; i < 3; i++)
         {
             float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
-            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT+ sgn(consigne[i])*FRICTION_CONSTANT;
+            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT ;
+            speedVal += (std::abs(consigne[i])<150)?sgn(consigne[i])*FRICTION_CONSTANT:0;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
             motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
