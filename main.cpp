@@ -10,6 +10,8 @@
 constexpr float pi = 3.1415;
 #define NO_SHOW
 #define MOTOR_CONSTANT 255 / (4 * 300)
+// #define BARY_ALGO
+#define PROP_ALGO
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
@@ -107,8 +109,8 @@ void *DroiteUpdateThread(void *argv)
 {
     while (!stopFlag)
     {
-        CommandeAfterPidGlobal[0] = pidDroite.update(90-angleDeg);
-        CommandeAfterPidGlobal[1] = pidRot.update(90-angleDeg);
+        CommandeAfterPidGlobal[0] = pidDroite.update(90 - angleDeg);
+        CommandeAfterPidGlobal[1] = pidRot.update(90 - angleDeg);
     }
     return nullptr;
 }
@@ -148,14 +150,16 @@ void stop(int _)
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
 }
-void printBuffer3(float input[3]) {
+void printBuffer3(float input[3])
+{
     for (int i = 0; i < 3; i++)
     {
         std::cout << input[i] << " ";
     }
     std::cout << std::endl;
 }
-void printBuffer3(int input[3]) {
+void printBuffer3(int input[3])
+{
     for (int i = 0; i < 3; i++)
     {
         std::cout << input[i] << " ";
@@ -207,7 +211,10 @@ int main(int argc, char **argv)
     }*/
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
+
+    #ifdef BARY_ALGO
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
+    #endif
     int width = 1280;
     int height = 720;
 
@@ -324,41 +331,43 @@ int main(int argc, char **argv)
         ch = cv::waitKey(5);
 #endif
         angleDeg = angle * 180 / pi;
-        float commande[3] = {1,0,0};
-        commande[0] = 0.5;/*
+        float commande[3] = {0.5f, 0, 0};
+        commande[0] = 0.5;
+#ifdef BARY_ALGO
         if (std::abs(angleDeg - 90) < 30)
         {
-            commande[2] = (angleDeg - 90)/90;//CommandeAfterPidGlobal[1];
+            commande[2] = CommandeAfterPidGlobal[1];
             commande[3] = 0;
         }
         else
         {
             commande[2] = 0;
-            commande[3] = (angleDeg - 90)/90; //CommandeAfterPidGlobal[0];
+            commande[3] = CommandeAfterPidGlobal[0];
+        }
+        /*if (angleDeg - 90>0) {
+         commande[1] = -0.5;
+        }else {
+         commande[1] = 0.5;
         }*/
-       /*if (angleDeg - 90>0) {
-        commande[1] = -0.5; 
-       }else {
-        commande[1] = 0.5; 
-       }*/
-      commande[2] = (90 - angleDeg)/90;
+#endif
+#ifdef PROP_ALGO
+        commande[2] = (90 - angleDeg) / 90;
         float consigneMid[3] = {0};
 
         Holonomic::Convert(commande, consigneMid);
-        
+
         for (int i = 0; i < 3; i++)
         {
             consigne[i] = (int)(400 * consigneMid[i]);
-
         }
-        std::cout<<angleDeg<<std::endl;
-        std::cout<<"commande : ";
+#endif
+        std::cout << angleDeg << std::endl;
+        std::cout << "commande : ";
         printBuffer3(commande);
-        std::cout<<"consigneMid : ";
+        std::cout << "consigneMid : ";
         printBuffer3(consigneMid);
-        std::cout<<"consigne : ";
+        std::cout << "consigne : ";
         printBuffer3(consigne);
-
     }
 
     cam.stopVideo();
