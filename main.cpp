@@ -7,11 +7,8 @@
 #include "Holonomic.hpp"
 #include "Encoder.hpp"
 #include <signal.h>
+#include "config.h"
 constexpr float pi = 3.1415;
-#define NO_SHOW
-#define MOTOR_CONSTANT 255 / (4 * 300)
-// #define BARY_ALGO
-#define PROP_ALGO
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
