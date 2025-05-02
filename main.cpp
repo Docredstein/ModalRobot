@@ -265,7 +265,7 @@ int main(int argc, char **argv)
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
-        
+        float commande[3] = {0.5f, 0, 0};
 #if defined(BARY_ALGO) || defined(PROP_ALGO)
 
         cv::Moments blue_moment = cv::moments(mask_blue, true);
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
         ch = cv::waitKey(5);
 #endif
         angleDeg = angle * 180 / pi;
-        float commande[3] = {0.5f, 0, 0};
+
         commande[0] = 0.5;
 #ifdef BARY_ALGO
         if (std::abs(angleDeg - 90) < 30)
@@ -352,12 +352,10 @@ int main(int argc, char **argv)
 #endif
 #endif // calcul de l'angle des barycentre
 
-
-
-
-
 #ifdef PROP_ALGO
         commande[2] = (90 - angleDeg) / 90;
+#endif
+
         float consigneMid[3] = {0};
 
         Holonomic::Convert(commande, consigneMid);
@@ -366,8 +364,8 @@ int main(int argc, char **argv)
         {
             consigne[i] = (int)(400 * consigneMid[i]);
         }
-#endif
         std::cout << angleDeg << std::endl;
+        
         std::cout << "commande : ";
         printBuffer3(commande);
         std::cout << "consigneMid : ";
