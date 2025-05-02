@@ -8,7 +8,7 @@
 #include "Encoder.hpp"
 #include <signal.h>
 #include "config.h"
-//constexpr float pi = 3.1415;
+// constexpr float pi = 3.1415;
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
@@ -30,8 +30,8 @@ float translation = 0;
 float rotation = 0;
 float avance = 0;
 bool stopFlag = false;
-PID pidDroite = PID(1, 0.1, 0, 200);
-PID pidRot = PID(1, 0.1, 0, 200);
+PID pidDroite = PID(0.01, 0.001, 0, 200);
+PID pidRot = PID(0.01, 0.001, 0, 200);
 void *getSpeed(void *vargp)
 {
     while (!stopFlag)
@@ -106,8 +106,8 @@ void *DroiteUpdateThread(void *argv)
 {
     while (!stopFlag)
     {
-        CommandeAfterPidGlobal[0] = pidDroite.update(90 - angleDeg);
-        CommandeAfterPidGlobal[1] = pidRot.update(90 - angleDeg);
+        CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
+        CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));
     }
     return nullptr;
 }
@@ -336,7 +336,14 @@ int main(int argc, char **argv)
 
         commande[0] = 0.5;
 #ifdef BARY_ALGO
-        if (std::abs(angleDeg - 90) < 30)
+
+        if (std::abs(angleDeg - 90) < 10)
+        {
+            commande[1] = 0;
+            commande[2] = 0;
+        }
+
+        else if (std::abs(angleDeg - 90) < 30)
         {
             commande[1] = CommandeAfterPidGlobal[1];
             commande[2] = 0;
@@ -367,7 +374,7 @@ int main(int argc, char **argv)
             consigne[i] = (int)(400 * consigneMid[i]);
         }
         std::cout << angleDeg << std::endl;
-        
+
         std::cout << "commande : ";
         printBuffer3(commande);
         std::cout << "consigneMid : ";
