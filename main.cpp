@@ -73,7 +73,8 @@ typedef struct motorStruct
 } motorType;
 
 motorType motorList[3]; //={motorType({driverA, MOTORA}), motorType({driverA, MOTORB}), motorType({driverB, MOTORA})};
-void clearScreen() {
+void clearScreen()
+{
     std::cout << "\x1B[2J\x1B[H";
 }
 void motorListInit(motorType motorlist[3])
@@ -137,30 +138,30 @@ pthread_t consigneThread;
 void stop(int _)
 {
     clearScreen();
-    std::cout<<"==========Stopping=========="<<std::endl;
+    std::cout << "==========Stopping==========" << std::endl;
     stopFlag = true;
     pthread_cancel(speedThread);
-    std::cout<<".";
+    std::cout << ".";
     pthread_cancel(motorThread);
-    std::cout<<".";
+    std::cout << ".";
     pthread_cancel(consigneThread);
-    std::cout<<".";
+    std::cout << ".";
     pthread_join(speedThread, NULL);
-    std::cout<<".";
+    std::cout << ".";
     pthread_join(motorThread, NULL);
-    std::cout<<".";
+    std::cout << ".";
     pthread_join(consigneThread, NULL);
-    for (int i =0; i<10;i++) {
-        std::cout<<".";
-        delay(100);
-        
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout << ".";
+        delay(250);
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
     for (int i = 0; i < 3; i++)
     {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
-    exit(0);
+    exit(_);
 }
 
 void printBuffer3(float input[3])
@@ -400,7 +401,8 @@ int main(int argc, char **argv)
 
     cam.stopVideo();
     stop(0);
+#ifndef NO_SHOW
     cv::destroyAllWindows();
-
+#endif
     return 0;
 }

@@ -3,3 +3,4 @@ constexpr float pi = 3.1415;
 #define MOTOR_CONSTANT 255 / (4 * 300)
 #define BARY_ALGO
 //#define PROP_ALGO
+//#define WHATTHEMOTORDOIN
