@@ -23,7 +23,10 @@ void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
 void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
 void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
 
+//volatile float speed[SPEED_AVERAGE_K][3] = {0};
 volatile float speed[3] = {0};
+volatile float speedAverage[3] = {0};
+volatile int speedCurrentIndex = 0;
 volatile long long lastPos[3] = {0};
 volatile long lastTime = 0;
 float translation = 0;
@@ -34,20 +37,39 @@ PID pidDroite = PID(0.01, 0.001, 0, 200);
 PID pidRot = PID(0.01, 0.001, 0, 200);
 void *getSpeed(void *vargp)
 {
+    const int timedelay = 50;
     while (!stopFlag)
     {
         for (int i = 0; i < 3; i++)
         {
-            speed[i] = (Encoderlist[i].pos - lastPos[i]) * 1e6 / ((micros() - lastTime) * 1.0f);
+            //speed[speedCurrentIndex][i] = (Encoderlist[i].pos - lastPos[i]) * 1e6 / ((micros() - lastTime) * 1.0f);
+            speed[i] = (Encoderlist[i].pos - lastPos[i]) * 1e3 / ( timedelay* 1.0f);
             lastPos[i] = Encoderlist[i].pos;
         }
         lastTime = micros();
+        //speedCurrentIndex = (speedCurrentIndex + 1) % SPEED_AVERAGE_K;
+
         // delay(100);
-        delay(100);
+        delay(timedelay);
     }
     return nullptr;
 }
-
+void *speedAverageCalc(void *vargp)
+{
+    while (!stopFlag)
+    {
+       /* for (int i = 0; i < 3; i++)
+        {
+            speedAverage[i] = 0;
+            for (int j = 0; j < SPEED_AVERAGE_K; j++)
+            {
+                speedAverage[i] += speed[j][i];
+            }
+            speedAverage[i] = speedAverage[i] / SPEED_AVERAGE_K;
+        }*/
+    }
+    return nullptr;
+}
 void EncoderInit()
 {
     for (int i = 0; i < 3; i++)
@@ -64,7 +86,7 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {0, 0, 0};
+float consigne[3] = {100, 150, 200};
 typedef struct motorStruct
 {
     MotorControl *driver;
@@ -80,9 +102,9 @@ void clearScreen()
 void motorListInit(motorType motorlist[3])
 {
 
-    PIDmotor[0] = PID(0.2, 0.5, 0, 500);
-    PIDmotor[1] = PID(0.2, 0.5, 0, 500);
-    PIDmotor[2] = PID(0.2, 0.5, 0, 500);
+    PIDmotor[0] = PID(MOTOR_KP, MOTOR_KI, MOTOR_KD, MOTOR_INT_LIMIT);
+    PIDmotor[1] = PID(MOTOR_KP, MOTOR_KI, MOTOR_KD, MOTOR_INT_LIMIT);
+    PIDmotor[2] = PID(MOTOR_KP, MOTOR_KI, MOTOR_KD, MOTOR_INT_LIMIT);
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
@@ -124,7 +146,7 @@ void *MotorUpdateThread(void *argv)
         for (int i = 0; i < 3; i++)
         {
             float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
-            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
+            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT+ FRICTION_CONSTANT;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
             motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
@@ -136,7 +158,7 @@ void *MotorUpdateThread(void *argv)
 pthread_t speedThread;
 pthread_t motorThread;
 pthread_t consigneThread;
-
+pthread_t averageCalc;
 void stop(int _)
 {
     clearScreen();
@@ -148,7 +170,11 @@ void stop(int _)
     std::cout << ".";
     pthread_cancel(consigneThread);
     std::cout << ".";
+    //pthread_cancel(averageCalc);
+    std::cout << ".";
     pthread_join(speedThread, NULL);
+    std::cout << ".";
+    //pthread_join(averageCalc, NULL);
     std::cout << ".";
     pthread_join(motorThread, NULL);
     std::cout << ".";
@@ -227,6 +253,7 @@ int main(int argc, char **argv)
     }*/
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
+    //pthread_create(&averageCalc, NULL, &speedAverageCalc, NULL);
 
 #ifdef BARY_ALGO
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
@@ -327,10 +354,22 @@ int main(int argc, char **argv)
 
         // float res = dirPID.update(width / 2.0f - x_red);
         // motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
+        #ifdef WHATTHEPIDDOIN
+        while (true) {
+            clearScreen();
+            for (int i = 0; i < 3; i++)
+        {
+            std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
+            //std::cout <<"lastPos : " <<lastPos[i] <<  ";lastTime : " << lastTime<<";CurrentPos : "<<Encoderlist[i].pos<<std::endl;
+        }
+        delay(100);
+        }
+        #endif
         std::cout << "-----------------------" << std::endl;
         for (int i = 0; i < 3; i++)
         {
-            std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << std::endl;
+            std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
+        
         }
 
         if (followingblue)
@@ -390,7 +429,7 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < 3; i++)
         {
-            consigne[i] = (int)(400 * consigneMid[i]);
+            consigne[i] = (int)(SPEED_CONSTANT * consigneMid[i]);
         }
         std::cout << angleDeg << std::endl;
 

@@ -16,7 +16,9 @@ PID::PID(float kp, float ki, float kd,float maxAccumulator)
 PID::~PID()
 {
 }
-
+float PID::getInt() {
+    return m_accumulator;
+}
 float PID::update(float const error) {
 
     //float error = target - measure;
