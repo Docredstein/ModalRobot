@@ -18,7 +18,7 @@ add_subdirectory(./PID)
 add_subdirectory(./Encoder)
 add_subdirectory(./Holonomic)
 add_executable(testVideo main.cpp)
-include(./config.h)
+
 #target_link_libraries(testVideo PRIVATE MotorControl)
 target_link_libraries(testVideo -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic -lwiringPi)
 

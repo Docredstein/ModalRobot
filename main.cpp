@@ -8,7 +8,7 @@
 #include "Encoder.hpp"
 #include <signal.h>
 #include "config.h"
-constexpr float pi = 3.1415;
+//constexpr float pi = 3.1415;
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
@@ -146,6 +146,7 @@ void stop(int _)
     {
         motorList[i].driver->setSpeed(motorList[i].side, 0);
     }
+    exit(0);
 }
 void printBuffer3(float input[3])
 {
@@ -252,6 +253,7 @@ int main(int argc, char **argv)
 #endif
 
     {
+        std::cout << "\x1B[2J\x1B[H";
 
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
@@ -336,13 +338,13 @@ int main(int argc, char **argv)
 #ifdef BARY_ALGO
         if (std::abs(angleDeg - 90) < 30)
         {
-            commande[2] = CommandeAfterPidGlobal[1];
-            commande[3] = 0;
+            commande[1] = CommandeAfterPidGlobal[1];
+            commande[2] = 0;
         }
         else
         {
-            commande[2] = 0;
-            commande[3] = CommandeAfterPidGlobal[0];
+            commande[1] = 0;
+            commande[2] = CommandeAfterPidGlobal[0];
         }
         /*if (angleDeg - 90>0) {
          commande[1] = -0.5;
