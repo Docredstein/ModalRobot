@@ -209,9 +209,9 @@ int main(int argc, char **argv)
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
 
-    #ifdef BARY_ALGO
+#ifdef BARY_ALGO
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
-    #endif
+#endif
     int width = 1280;
     int height = 720;
 
@@ -265,6 +265,9 @@ int main(int argc, char **argv)
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
+        
+#if defined(BARY_ALGO) || defined(PROP_ALGO)
+
         cv::Moments blue_moment = cv::moments(mask_blue, true);
         cv::Moments red_moment = cv::moments(mask_red, true);
 
@@ -293,7 +296,7 @@ int main(int argc, char **argv)
         cv::circle(image, bary_red, 25, cv::Scalar(0, 0, 255), (correct_red ? -1 : 5));
         cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (correct_blue ? -1 : 5)); // BGR
 #endif
-            // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
+                                                                                          // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
         /*cv::bitwise_and(image,image,out_red,mask_red);
         cv::bitwise_and(image,image,out_blue,mask_blue);*/
         // out = image*mask;
@@ -347,6 +350,12 @@ int main(int argc, char **argv)
          commande[1] = 0.5;
         }*/
 #endif
+#endif // calcul de l'angle des barycentre
+
+
+
+
+
 #ifdef PROP_ALGO
         commande[2] = (90 - angleDeg) / 90;
         float consigneMid[3] = {0};
