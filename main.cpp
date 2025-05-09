@@ -343,8 +343,10 @@ int main(int argc, char **argv)
 
     {
         clearScreen();
+        #ifdef SHOW_MASK
         out_blue.setTo(cv::Scalar(0, 0, 0));
         out_red.setTo(cv::Scalar(0, 0, 0));
+        #endif
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
         correct_reading = false;
@@ -589,13 +591,13 @@ int main(int argc, char **argv)
             {
                 commande[0] = 0;
                 commande[1] = 0;
-                commande[2] = -0.4;
+                commande[2] = -0.25;
             }
             else
             {
                 commande[0] = 0;
                 commande[1] = 0;
-                commande[2] = 0.4;
+                commande[2] = 0.25;
             }
         }
 #else
