@@ -64,8 +64,8 @@ namespace Holonomic
     }
     void Convert(float input[3], float output[3],bool invert = false)
     {
-        float avant[3] = {0, 1, -1};
-        float droite[3] = {1, 1 / sqrt2, 1 / sqrt2};
+        float avant[3] = {0, -1, 1};
+        float droite[3] = {-1, 1 / sqrt2, 1 / sqrt2};
         float rotation[3] = {1, 1, 1};
         normalize(input);
         float norme = 0;
