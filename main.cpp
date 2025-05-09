@@ -114,17 +114,17 @@ void motorListInit(motorType motorlist[3])
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
-    motor1.sens = 1;
+    motor1.sens = 1; // 1
 
     motorType motor2;
     motor2.driver = &driverA;
     motor2.side = MOTORB;
-    motor2.sens = 0;
+    motor2.sens = 0; // 0
 
     motorType motor3;
     motor3.driver = &driverB;
     motor3.side = MOTORB;
-    motor3.sens = 1;
+    motor3.sens = 1; // 1
 
     // swap
     motorlist[0] = motor2;
@@ -219,8 +219,8 @@ void printBuffer3(int input[3])
 void displayAngle(float angle, int width)
 {
     // angle en radian
-    int delta = width * std::sin(pi/2 - angle) / 2;
-    //std::cout << delta;
+    int delta = width * std::sin(pi / 2 - angle) / 2;
+    // std::cout << delta;
     for (int i = 0; i < width; i++)
     {
         if (i == (delta + width / 2))
@@ -232,7 +232,7 @@ void displayAngle(float angle, int width)
             std::cout << "-";
         }
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
     std::cout << "Starting" << std::endl;
     cam.startVideo();
 
-    cv::Scalar lowerbound_red = cv::Scalar(160, 200, 0);
+    cv::Scalar lowerbound_red = cv::Scalar(160, 100, 0);
     cv::Scalar higherbound_red = cv::Scalar(255, 255, 255);
     cv::Scalar lowerbound_blue = cv::Scalar(100, 120, 0);
     cv::Scalar higherbound_blue = cv::Scalar(150, 255, 255);
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
         double y_red = 0;
 
         cam.getVideoFrame(image, 2000);
-        cv::flip(image,image,-1);
+        cv::flip(image, image, -1);
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
@@ -401,11 +401,11 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
             std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
         }
 
-        if (correct_red && y_red > width / 2)
+        if (correct_red && !correct_blue)
         {
             followingblue = false;
         }
-        else if (correct_blue && y_blue > width / 2)
+        else if (correct_blue && !correct_red)
         {
             followingblue = true;
         }
@@ -431,7 +431,7 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
 
         commande[0] = 0.5;
 #ifdef BARY_ALGO
-
+#ifndef MANUAL_MODE
         if (std::abs(angleDeg - 90) < 10)
         {
             commande[0] = 1;
@@ -449,6 +449,42 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
             commande[1] = 0;
             commande[2] = CommandeAfterPidGlobal[0];
         }
+#else
+        switch (ch)
+        {
+        case 122:
+            commande[0] = 1;
+            commande[1] = 0;
+            commande[2] = 0;
+            break;
+        case 115:
+            commande[0] = -1;
+            commande[1] = 0;
+            commande[2] = 0;
+            break;
+        case 100:
+            commande[0] = 0;
+            commande[1] = 1;
+            commande[2] = 0;
+            break;
+        case 113:
+            commande[0] = 0;
+            commande[1] = -1;
+            commande[2] = 0;
+            break;
+        case 101:
+            commande[0] = 0;
+            commande[1] = 0;
+            commande[2] = 1;
+            break;
+        case 97:
+            commande[0] = 0;
+            commande[1] = 0;
+            commande[2] = -1;
+            break;
+        }
+
+#endif
         /*if (angleDeg - 90>0) {
          commande[1] = -0.5;
         }else {
@@ -463,7 +499,7 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
 
         float consigneMid[3] = {0};
 
-        Holonomic::Convert(commande, consigneMid);
+        Holonomic::Convert(commande, consigneMid, true);
 
         for (int i = 0; i < 3; i++)
         {
@@ -478,15 +514,17 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
         std::cout << "consigne : ";
         printBuffer3(consigne);
         std::cout << "Following : ";
-        if (followingblue) {
-             std::cout << "Blue";
+        if (followingblue)
+        {
+            std::cout << "Blue";
         }
-        else {
+        else
+        {
             std::cout << "Red";
         }
-        
-        std::cout << std::endl;
 
+        std::cout << std::endl;
+        std::cout << ch << std::endl;
         delay(10);
     }
 

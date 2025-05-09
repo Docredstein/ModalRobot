@@ -62,7 +62,7 @@ namespace Holonomic
             }
         }
     }
-    void Convert(float input[3], float output[3])
+    void Convert(float input[3], float output[3],bool invert = false)
     {
         float avant[3] = {0, 1, -1};
         float droite[3] = {1, 1 / sqrt2, 1 / sqrt2};
@@ -72,6 +72,9 @@ namespace Holonomic
         for (int i = 0; i < 3; i++)
         {
             output[i] = avant[i] * input[0] + droite[i] * input[1] + rotation[i] * input[2];
+            if (invert) {
+                output[i] = -output[i];
+            }
             norme += output[i] * output[i];
         }
 
