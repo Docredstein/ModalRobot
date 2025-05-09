@@ -23,7 +23,7 @@ void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
 void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
 void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
 
-//volatile float speed[SPEED_AVERAGE_K][3] = {0};
+// volatile float speed[SPEED_AVERAGE_K][3] = {0};
 volatile float speed[3] = {0};
 volatile float speedAverage[3] = {0};
 volatile int speedCurrentIndex = 0;
@@ -36,8 +36,9 @@ bool stopFlag = false;
 PID pidDroite = PID(0.01, 0.001, 0, 200);
 PID pidRot = PID(0.01, 0.001, 0, 200);
 
-int sgn(float t) {
-    return ((t>=0) - (t<0));
+int sgn(float t)
+{
+    return ((t >= 0) - (t < 0));
 }
 
 void *getSpeed(void *vargp)
@@ -47,12 +48,12 @@ void *getSpeed(void *vargp)
     {
         for (int i = 0; i < 3; i++)
         {
-            //speed[speedCurrentIndex][i] = (Encoderlist[i].pos - lastPos[i]) * 1e6 / ((micros() - lastTime) * 1.0f);
-            speed[i] = (Encoderlist[i].pos - lastPos[i]) * 1e3 / ( timedelay* 1.0f);
+            // speed[speedCurrentIndex][i] = (Encoderlist[i].pos - lastPos[i]) * 1e6 / ((micros() - lastTime) * 1.0f);
+            speed[i] = (Encoderlist[i].pos - lastPos[i]) * 1e3 / (timedelay * 1.0f);
             lastPos[i] = Encoderlist[i].pos;
         }
         lastTime = micros();
-        //speedCurrentIndex = (speedCurrentIndex + 1) % SPEED_AVERAGE_K;
+        // speedCurrentIndex = (speedCurrentIndex + 1) % SPEED_AVERAGE_K;
 
         // delay(100);
         delay(timedelay);
@@ -63,15 +64,15 @@ void *speedAverageCalc(void *vargp)
 {
     while (!stopFlag)
     {
-       /* for (int i = 0; i < 3; i++)
-        {
-            speedAverage[i] = 0;
-            for (int j = 0; j < SPEED_AVERAGE_K; j++)
-            {
-                speedAverage[i] += speed[j][i];
-            }
-            speedAverage[i] = speedAverage[i] / SPEED_AVERAGE_K;
-        }*/
+        /* for (int i = 0; i < 3; i++)
+         {
+             speedAverage[i] = 0;
+             for (int j = 0; j < SPEED_AVERAGE_K; j++)
+             {
+                 speedAverage[i] += speed[j][i];
+             }
+             speedAverage[i] = speedAverage[i] / SPEED_AVERAGE_K;
+         }*/
     }
     return nullptr;
 }
@@ -151,8 +152,8 @@ void *MotorUpdateThread(void *argv)
         for (int i = 0; i < 3; i++)
         {
             float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
-            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT ;
-            speedVal += (std::abs(consigne[i])<150)?sgn(consigne[i])*FRICTION_CONSTANT:0;
+            speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
+            speedVal += (std::abs(consigne[i]) < 150) ? sgn(consigne[i]) * FRICTION_CONSTANT : 0;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
             motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
@@ -176,11 +177,11 @@ void stop(int _)
     std::cout << ".";
     pthread_cancel(consigneThread);
     std::cout << ".";
-    //pthread_cancel(averageCalc);
+    // pthread_cancel(averageCalc);
     std::cout << ".";
     pthread_join(speedThread, NULL);
     std::cout << ".";
-    //pthread_join(averageCalc, NULL);
+    // pthread_join(averageCalc, NULL);
     std::cout << ".";
     pthread_join(motorThread, NULL);
     std::cout << ".";
@@ -214,6 +215,23 @@ void printBuffer3(int input[3])
     }
     std::cout << std::endl;
 }
+
+void displayAngle(float angle, int width) {
+    //angle en radian
+    int delta = width*std::sin(angle)/2 ;
+    for (int i = 0;i<width;i++) {
+        if (i==(delta+width/2)) {
+            std::cout<<"X";
+        }
+        else {
+            std::cout<<"-";
+        }
+    }
+}
+
+
+
+
 int main(int argc, char **argv)
 {
     signal(SIGINT, stop);
@@ -259,7 +277,7 @@ int main(int argc, char **argv)
     }*/
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
-    //pthread_create(&averageCalc, NULL, &speedAverageCalc, NULL);
+    // pthread_create(&averageCalc, NULL, &speedAverageCalc, NULL);
 
 #ifdef BARY_ALGO
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
@@ -295,6 +313,7 @@ int main(int argc, char **argv)
 
     int ch = 0;
     bool correct_reading = false;
+    bool followingblue = false;
     // motorList[0].driver->setSpeed(motorList[0].side, 255);
     // motorList[1].driver->setSpeed(motorList[1].side, 255);
 #ifndef NO_SHOW
@@ -313,7 +332,7 @@ int main(int argc, char **argv)
         double y_blue = 0;
         double x_red = 0;
         double y_red = 0;
-        bool followingblue = false;
+
         cam.getVideoFrame(image, 2000);
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
@@ -350,32 +369,40 @@ int main(int argc, char **argv)
         cv::circle(image, bary_blue, 25, cv::Scalar(255, 0, 0), (correct_blue ? -1 : 5)); // BGR
 #endif
                                                                                           // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
-        /*cv::bitwise_and(image,image,out_red,mask_red);
-        cv::bitwise_and(image,image,out_blue,mask_blue);*/
-        // out = image*mask;
-        // cv::threshold(image,out,)
-        // cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
-        // cv::imshow("red",out_red);
-        // cv::imshow("blue",out_blue);
+/*cv::bitwise_and(image,image,out_red,mask_red);
+cv::bitwise_and(image,image,out_blue,mask_blue);*/
+// out = image*mask;
+// cv::threshold(image,out,)
+// cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
+// cv::imshow("red",out_red);
+// cv::imshow("blue",out_blue);
 
-        // float res = dirPID.update(width / 2.0f - x_red);
-        // motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
-        #ifdef WHATTHEPIDDOIN
-        while (true) {
+// float res = dirPID.update(width / 2.0f - x_red);
+// motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
+#ifdef WHATTHEPIDDOIN
+        while (true)
+        {
             clearScreen();
             for (int i = 0; i < 3; i++)
-        {
-            std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
-            //std::cout <<"lastPos : " <<lastPos[i] <<  ";lastTime : " << lastTime<<";CurrentPos : "<<Encoderlist[i].pos<<std::endl;
+            {
+                std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
+                // std::cout <<"lastPos : " <<lastPos[i] <<  ";lastTime : " << lastTime<<";CurrentPos : "<<Encoderlist[i].pos<<std::endl;
+            }
+            delay(100);
         }
-        delay(100);
-        }
-        #endif
+#endif
         std::cout << "-----------------------" << std::endl;
         for (int i = 0; i < 3; i++)
         {
             std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
-        
+        }
+
+        if ((red_moment.m00 / (width * height * 1.0f)) > 0.1f && y_red > width / 2)
+        {
+            followingblue = false;
+        }
+        else if ((blue_moment.m00 / (width * height * 1.0f)) > 0.1f && y_blue > width / 2) {
+            followingblue = true;
         }
 
         if (followingblue)
@@ -445,7 +472,8 @@ int main(int argc, char **argv)
         printBuffer3(consigneMid);
         std::cout << "consigne : ";
         printBuffer3(consigne);
-
+        std::cout << "Following : " << followingblue?"Blue":"Red" <<std::endl;
+        displayAngle(angle,20);
         delay(10);
     }
 
