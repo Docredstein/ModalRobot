@@ -37,7 +37,7 @@ float avance = 0;
 double x_near;
 bool stopFlag = false;
 PID pidDroite = PID(0.01, 0.001, 0, 200);
-PID pidRot = PID(0.01, 0.001, 0, 200);
+PID pidRot = PID(0.001, 0.001, 0, 200);
 
 int sgn(float t)
 {
@@ -143,7 +143,7 @@ void *DroiteUpdateThread(void *argv)
         /*CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));*/
         // CommandeAfterPidGlobal[0] = pidDroite.update(90 - (angleDeg));
-        CommandeAfterPidGlobal[0] = pidDroite.update(width/2.0f - x_near);
+        CommandeAfterPidGlobal[0] = pidDroite.update(width / 2.0f - x_near);
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (angleDeg));
     }
     return nullptr;
@@ -293,10 +293,10 @@ int main(int argc, char **argv)
     int totalpixel = width * height;
     float validlock = 0.02;
 
-    cv::Mat image = cv::Mat(width, height, CV_8UC3);
-    cv::Mat imageHSV = cv::Mat(width, height, CV_8UC3);
+    cv::Mat image = cv::Mat(height, width, CV_8UC3);
+    cv::Mat imageHSV = cv::Mat(height, width, CV_8UC3);
     cv::Mat mask_red, mask_blue, out_red, out_blue, mask_color_up, mask_color_down;
-    cv::Mat mask_up(height, width, CV_8UC1, cv::Scalar(0)), mask_down(height, width, CV_8UC1, cv::Scalar(0));
+    cv::Mat mask_up(height, width, CV_8U, cv::Scalar(0)), mask_down(height, width, CV_8U, cv::Scalar(0));
     mask_up(cv::Rect(0, 0, width, height / 2)) = 255;
     mask_down(cv::Rect(0, height / 2, width, height / 2)) = 255;
 
@@ -310,12 +310,19 @@ int main(int argc, char **argv)
 // cv::namedWindow("blue",cv::WINDOW_NORMAL);
 #ifndef NO_SHOW
     cv::namedWindow("Video2", cv::WINDOW_NORMAL);
+#ifdef SHOW_MASK
+    cv::namedWindow("masked blue", cv::WINDOW_NORMAL);
+    cv::namedWindow("masked red", cv::WINDOW_NORMAL);
+#endif
 #endif
     std::cout << "Starting" << std::endl;
     cam.startVideo();
 
     cv::Scalar lowerbound_red = cv::Scalar(160, 100, 0);
-    cv::Scalar higherbound_red = cv::Scalar(255, 255, 255);
+    cv::Scalar higherbound_red = cv::Scalar(180, 255, 255);
+    cv::Scalar higherbound2_red = cv::Scalar(30, 255, 255);
+    cv::Scalar lowerbound2_red = cv::Scalar(0, 100, 0);
+
     cv::Scalar lowerbound_blue = cv::Scalar(100, 120, 0);
     cv::Scalar higherbound_blue = cv::Scalar(150, 255, 255);
 
@@ -332,7 +339,8 @@ int main(int argc, char **argv)
 
     {
         clearScreen();
-
+        out_blue.setTo(cv::Scalar(0, 0, 0));
+        out_red.setTo(cv::Scalar(0, 0, 0));
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
         correct_reading = false;
@@ -344,24 +352,33 @@ int main(int argc, char **argv)
         double y_blue_far = 0;
         double x_red_far = 0;
         double y_red_far = 0;
-
+        cv::Mat maskRed2;
         cam.getVideoFrame(image, 2000);
         cv::flip(image, image, -1);
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
-        cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
+        cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red); //==>mask
+        cv::inRange(imageHSV, lowerbound2_red, higherbound2_red, maskRed2);
+        cv::bitwise_or(mask_red, maskRed2, mask_red);                        //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
+        //std::cout << "blue : " << mask_blue.size() << "mask" << mask_up.size() << std::endl;
         float commande[3] = {0.0f, 0, 0};
 #if defined(BARY_ALGO) || defined(PROP_ALGO)
         cv::bitwise_and(mask_up, mask_blue, mask_color_up);
         cv::bitwise_and(mask_down, mask_blue, mask_color_down);
         cv::Moments blue_moment_up = cv::moments(mask_color_up, true);
         cv::Moments blue_moment_down = cv::moments(mask_color_down, true);
-
+#ifdef SHOW_MASK
+        cv::bitwise_and(image, image, out_blue, mask_color_up);
+        cv::imshow("masked blue", out_blue);
+#endif
         cv::bitwise_and(mask_up, mask_red, mask_color_up);
         cv::bitwise_and(mask_down, mask_red, mask_color_down);
         cv::Moments red_moment_up = cv::moments(mask_color_up, true);
         cv::Moments red_moment_down = cv::moments(mask_color_down, true);
-
+#ifdef SHOW_MASK
+        cv::bitwise_and(image, image, out_red, mask_color_up);
+        cv::imshow("masked red", out_red);
+#endif
         // cv::Moments red_moment = cv::moments(mask_red, true);
 
         /* OLD
@@ -441,13 +458,13 @@ int main(int argc, char **argv)
         cv::circle(image, bary_blue_near, 25, cv::Scalar(255, 0, 0), (correct_blue_near ? -1 : 5)); // BGR
 #endif
                                                                                                     // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
-/*cv::bitwise_and(image,image,out_red,mask_red);
-cv::bitwise_and(image,image,out_blue,mask_blue);*/
-// out = image*mask;
-// cv::threshold(image,out,)
-// cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
-// cv::imshow("red",out_red);
-// cv::imshow("blue",out_blue);
+// cv::bitwise_and(image,image,out_red,mask_red);
+// cv::bitwise_and(image,image,out_blue,mask_blue);
+//  out = image*mask;
+//  cv::threshold(image,out,)
+//  cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
+//  cv::imshow("red",out_red);
+//  cv::imshow("blue",out_blue);
 
 // float res = dirPID.update(width / 2.0f - x_red);
 // motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
@@ -511,8 +528,8 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
         }*/
         // L'idée, c'est de centrer juste l'x en bas et de s'orienter pour que l'angle soit de ~90°
         commande[0] = 0.5;
-        commande[1] = CommandeAfterPidGlobal[0]; //centrage de x_near
-        commande[2] = CommandeAfterPidGlobal[1]; //alignement de angle
+        commande[1] = CommandeAfterPidGlobal[0]; // centrage de x_near
+        commande[2] = CommandeAfterPidGlobal[1]; // alignement de angle
 #else
         switch (ch)
         {
