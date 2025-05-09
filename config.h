@@ -14,4 +14,4 @@ constexpr float pi = 3.1415;
 //#define PROP_ALGO
 //#define WHATTHEMOTORDOIN
 //#define WHATTHEPIDDOIN
-//#define SHOW_MASK
+#define SHOW_MASK
