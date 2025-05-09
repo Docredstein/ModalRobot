@@ -324,14 +324,15 @@ int main(int argc, char **argv)
     cv::Scalar lowerbound_red = cv::Scalar(160, 100, 0);
     cv::Scalar higherbound_red = cv::Scalar(180, 255, 255);
     cv::Scalar lowerbound2_red = cv::Scalar(0, 100, 0);
-    cv::Scalar higherbound2_red = cv::Scalar(30, 255, 255);
+    cv::Scalar higherbound2_red = cv::Scalar(20, 255, 255);
 
-    cv::Scalar lowerbound_blue = cv::Scalar(100, 120, 0);
+    cv::Scalar lowerbound_blue = cv::Scalar(100, 80, 0);
     cv::Scalar higherbound_blue = cv::Scalar(150, 255, 255);
 
     int ch = 0;
     bool correct_reading = false;
     bool followingblue = false;
+
     // motorList[0].driver->setSpeed(motorList[0].side, 255);
     // motorList[1].driver->setSpeed(motorList[1].side, 255);
 #ifndef NO_SHOW
@@ -355,6 +356,9 @@ int main(int argc, char **argv)
         double y_blue_far = 0;
         double x_red_far = 0;
         double y_red_far = 0;
+        int lostTime = -1;
+        int searchTime = 1000;
+        bool turnSide = false; // false = right, true = left
         cv::Mat maskRed2;
         cam.getVideoFrame(image, 2000);
         cv::flip(image, image, -1);
@@ -371,7 +375,7 @@ int main(int argc, char **argv)
         cv::Moments blue_moment_up = cv::moments(mask_color_up, true);
         cv::Moments blue_moment_down = cv::moments(mask_color_down, true);
 #ifdef SHOW_MASK
-        cv::bitwise_and(image, image, out_blue, mask_color_up);
+        cv::bitwise_and(image, image, out_blue, mask_color_down);
         cv::imshow("masked blue", out_blue);
 #endif
         cv::bitwise_and(mask_up, mask_red, mask_color_up);
@@ -422,8 +426,8 @@ int main(int argc, char **argv)
         }
         if (blue_moment_up.m00 > 0)
         {
-            x_blue_near = blue_moment_up.m10 / blue_moment_up.m00;
-            y_blue_near = blue_moment_up.m01 / blue_moment_up.m00;
+            x_blue_far = blue_moment_up.m10 / blue_moment_up.m00;
+            y_blue_far = blue_moment_up.m01 / blue_moment_up.m00;
         }
 
         if (red_moment_up.m00 > 0)
@@ -457,9 +461,8 @@ int main(int argc, char **argv)
             lost = true;
         }
 
-  
-        valid_lock_near = (correct_blue_near&&followingblue)||(correct_red_near&&!followingblue);
-        valid_lock_far = (correct_blue_far&&followingblue)||(correct_red_far&&!followingblue);
+        valid_lock_near = (correct_blue_near && followingblue) || (correct_red_near && !followingblue);
+        valid_lock_far = (correct_blue_far && followingblue) || (correct_red_far && !followingblue);
 
         if (followingblue)
         {
@@ -551,25 +554,49 @@ int main(int argc, char **argv)
         // L'idée, c'est de centrer juste l'x en bas et de s'orienter pour que l'angle soit de ~90°
         if (!lost)
         {
+            lostTime = -1;
             commande[0] = 0.5;
-            if (valid_lock_near) {
-            commande[1] = CommandeAfterPidGlobal[0]; // centrage de x_near
+            if (valid_lock_near)
+            {
+                commande[1] = CommandeAfterPidGlobal[0]; // centrage de x_near
             }
-            else {
+            else
+            {
                 commande[1] = 0;
             }
-            if (valid_lock_far) {
-            commande[2] = CommandeAfterPidGlobal[1]; // alignement de angle
+            if (valid_lock_far)
+            {
+                commande[2] = CommandeAfterPidGlobal[1]; // alignement de angle
             }
-            else {
-                commande[2]=0;
+            else
+            {
+                commande[2] = 0;
             }
         }
         else
         {
-            commande[0] = 0;
-            commande[1] = 0;
-            commande[2] = 0.2;
+            if (lostTime < 0)
+            {
+                lostTime = millis();
+            }
+            if ((millis() - lostTime) > searchTime)
+            {
+                searchTime += 1000;
+                lostTime = millis();
+                turnSide = !turnSide;
+            }
+            if (turnSide)
+            {
+                commande[0] = 0;
+                commande[1] = 0;
+                commande[2] = -0.4;
+            }
+            else
+            {
+                commande[0] = 0;
+                commande[1] = 0;
+                commande[2] = 0.4;
+            }
         }
 #else
         switch (ch)
@@ -652,7 +679,23 @@ int main(int argc, char **argv)
         }
 
         std::cout << std::endl;
-        std::cout << ch << std::endl;
+        if (valid_lock_near)
+        {
+            std::cout << "->Locked Near<-" << std::endl;
+        }
+        else
+        {
+            std::cout << " |No Lock Near|" << std::endl;
+        }
+        if (valid_lock_far)
+        {
+            std::cout << "->Locked Far<-" << std::endl;
+        }
+        else
+        {
+            std::cout << " |No Lock Far|" << std::endl;
+        }
+        // std::cout << ch << std::endl;
         delay(10);
     }
 

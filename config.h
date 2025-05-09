@@ -1,5 +1,5 @@
 constexpr float pi = 3.1415;
-//#define NO_SHOW
+#define NO_SHOW
 #define MOTOR_CONSTANT 255 / (2*4 * 200)
 #define BARY_ALGO
 #define MOTOR_KP 0.07 //0.04 on air
@@ -14,4 +14,12 @@ constexpr float pi = 3.1415;
 //#define PROP_ALGO
 //#define WHATTHEMOTORDOIN
 //#define WHATTHEPIDDOIN
-#define SHOW_MASK
+//#define SHOW_MASK
+
+
+
+
+
+#if defined(SHOW_MASK)&&defined(NO_SHOW)
+#error "If SHOW_MASK is used, there must be a desktop environement enabled (NO_SHOW must be undefined)"
+#endif
