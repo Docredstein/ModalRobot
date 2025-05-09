@@ -36,7 +36,7 @@ float rotation = 0;
 float avance = 0;
 double x_near;
 bool stopFlag = false;
-PID pidDroite = PID(0.01, 0.001, 0, 200);
+PID pidDroite = PID(1, 0.001, 0, 100);
 PID pidRot = PID(0.001, 0.001, 0, 200);
 
 int sgn(float t)
@@ -143,7 +143,7 @@ void *DroiteUpdateThread(void *argv)
         /*CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));*/
         // CommandeAfterPidGlobal[0] = pidDroite.update(90 - (angleDeg));
-        CommandeAfterPidGlobal[0] = pidDroite.update(width / 2.0f - x_near);
+        CommandeAfterPidGlobal[0] = pidDroite.update((x_near- width / 2.0f)/width);
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (angleDeg));
     }
     return nullptr;
