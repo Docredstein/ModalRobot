@@ -216,21 +216,24 @@ void printBuffer3(int input[3])
     std::cout << std::endl;
 }
 
-void displayAngle(float angle, int width) {
-    //angle en radian
-    int delta = width*std::sin(angle)/2 ;
-    for (int i = 0;i<width;i++) {
-        if (i==(delta+width/2)) {
-            std::cout<<"X";
+void displayAngle(float angle, int width)
+{
+    // angle en radian
+    int delta = width * std::sin(pi/2 - angle) / 2;
+    //std::cout << delta;
+    for (int i = 0; i < width; i++)
+    {
+        if (i == (delta + width / 2))
+        {
+            std::cout << "X";
         }
-        else {
-            std::cout<<"-";
+        else
+        {
+            std::cout << "-";
         }
     }
+    std::cout<<std::endl;
 }
-
-
-
 
 int main(int argc, char **argv)
 {
@@ -334,6 +337,7 @@ int main(int argc, char **argv)
         double y_red = 0;
 
         cam.getVideoFrame(image, 2000);
+        cv::flip(image,image,-1);
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
         cv::inRange(imageHSV, lowerbound_red, higherbound_red, mask_red);    //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
@@ -397,11 +401,12 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
             std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
         }
 
-        if ((red_moment.m00 / (width * height * 1.0f)) > 0.1f && y_red > width / 2)
+        if (correct_red && y_red > width / 2)
         {
             followingblue = false;
         }
-        else if ((blue_moment.m00 / (width * height * 1.0f)) > 0.1f && y_blue > width / 2) {
+        else if (correct_blue && y_blue > width / 2)
+        {
             followingblue = true;
         }
 
@@ -465,7 +470,7 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
             consigne[i] = (int)(SPEED_CONSTANT * consigneMid[i]);
         }
         std::cout << angleDeg << std::endl;
-
+        displayAngle(angle, 20);
         std::cout << "commande : ";
         printBuffer3(commande);
         std::cout << "consigneMid : ";
@@ -473,9 +478,15 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
         std::cout << "consigne : ";
         printBuffer3(consigne);
         std::cout << "Following : ";
-        std::cout << followingblue?"Blue":"Red" ;
-        std::cout <<std::endl;
-        displayAngle(angle,20);
+        if (followingblue) {
+             std::cout << "Blue";
+        }
+        else {
+            std::cout << "Red";
+        }
+        
+        std::cout << std::endl;
+
         delay(10);
     }
 
