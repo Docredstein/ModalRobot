@@ -472,7 +472,9 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
         printBuffer3(consigneMid);
         std::cout << "consigne : ";
         printBuffer3(consigne);
-        std::cout << "Following : " << followingblue?"Blue":"Red" <<std::endl;
+        std::cout << "Following : ";
+        std::cout << followingblue?"Blue":"Red" ;
+        std::cout <<std::endl;
         displayAngle(angle,20);
         delay(10);
     }
