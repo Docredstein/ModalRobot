@@ -19,6 +19,9 @@ float lastCommandAfterPID[3] = {0};
 Encoder Encoderlist[3];
 float angle = 0;
 float angleDeg = 0;
+bool lost = false;
+bool valid_lock_near = false;
+bool valid_lock_far = false;
 int width = 1280;
 int height = 720;
 void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
@@ -143,7 +146,7 @@ void *DroiteUpdateThread(void *argv)
         /*CommandeAfterPidGlobal[0] = pidDroite.update(90 - (180 - angleDeg));
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (180 - angleDeg));*/
         // CommandeAfterPidGlobal[0] = pidDroite.update(90 - (angleDeg));
-        CommandeAfterPidGlobal[0] = pidDroite.update((x_near- width / 2.0f)/width);
+        CommandeAfterPidGlobal[0] = pidDroite.update((x_near - width / 2.0f) / width);
         CommandeAfterPidGlobal[1] = pidRot.update(90 - (angleDeg));
     }
     return nullptr;
@@ -320,8 +323,8 @@ int main(int argc, char **argv)
 
     cv::Scalar lowerbound_red = cv::Scalar(160, 100, 0);
     cv::Scalar higherbound_red = cv::Scalar(180, 255, 255);
-    cv::Scalar higherbound2_red = cv::Scalar(30, 255, 255);
     cv::Scalar lowerbound2_red = cv::Scalar(0, 100, 0);
+    cv::Scalar higherbound2_red = cv::Scalar(30, 255, 255);
 
     cv::Scalar lowerbound_blue = cv::Scalar(100, 120, 0);
     cv::Scalar higherbound_blue = cv::Scalar(150, 255, 255);
@@ -360,7 +363,7 @@ int main(int argc, char **argv)
         cv::inRange(imageHSV, lowerbound2_red, higherbound2_red, maskRed2);
         cv::bitwise_or(mask_red, maskRed2, mask_red);                        //==>mask
         cv::inRange(imageHSV, lowerbound_blue, higherbound_blue, mask_blue); //==>mask
-        //std::cout << "blue : " << mask_blue.size() << "mask" << mask_up.size() << std::endl;
+        // std::cout << "blue : " << mask_blue.size() << "mask" << mask_up.size() << std::endl;
         float commande[3] = {0.0f, 0, 0};
 #if defined(BARY_ALGO) || defined(PROP_ALGO)
         cv::bitwise_and(mask_up, mask_blue, mask_color_up);
@@ -438,6 +441,25 @@ int main(int argc, char **argv)
         bool correct_red_far = red_moment_up.m00 / totalpixel > validlock;
         bool correct_blue_near = blue_moment_down.m00 / totalpixel > validlock;
         bool correct_blue_far = blue_moment_up.m00 / totalpixel > validlock;
+
+        if (!correct_blue_far && !correct_blue_near && (correct_red_far || correct_red_near))
+        {
+            followingblue = false;
+            lost = false;
+        }
+        else if (!correct_red_far && !correct_red_near && (correct_blue_far || correct_blue_near))
+        {
+            followingblue = true;
+            lost = false;
+        }
+        else if (!(correct_blue_far || correct_red_far || correct_blue_near || correct_red_near))
+        {
+            lost = true;
+        }
+
+  
+        valid_lock_near = (correct_blue_near&&followingblue)||(correct_red_near&&!followingblue);
+        valid_lock_far = (correct_blue_far&&followingblue)||(correct_red_far&&!followingblue);
 
         if (followingblue)
         {
@@ -527,9 +549,28 @@ int main(int argc, char **argv)
             commande[2] = CommandeAfterPidGlobal[0];
         }*/
         // L'idée, c'est de centrer juste l'x en bas et de s'orienter pour que l'angle soit de ~90°
-        commande[0] = 0.5;
-        commande[1] = CommandeAfterPidGlobal[0]; // centrage de x_near
-        commande[2] = CommandeAfterPidGlobal[1]; // alignement de angle
+        if (!lost)
+        {
+            commande[0] = 0.5;
+            if (valid_lock_near) {
+            commande[1] = CommandeAfterPidGlobal[0]; // centrage de x_near
+            }
+            else {
+                commande[1] = 0;
+            }
+            if (valid_lock_far) {
+            commande[2] = CommandeAfterPidGlobal[1]; // alignement de angle
+            }
+            else {
+                commande[2]=0;
+            }
+        }
+        else
+        {
+            commande[0] = 0;
+            commande[1] = 0;
+            commande[2] = 0.2;
+        }
 #else
         switch (ch)
         {
