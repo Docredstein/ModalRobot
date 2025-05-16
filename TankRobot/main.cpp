@@ -24,7 +24,7 @@ int height = 720;
 void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
 void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
 void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
-
+void doLogic(float[3]& commande);
 // volatile float speed[SPEED_AVERAGE_K][3] = {0};
 volatile float speed[3] = {0};
 volatile float speedAverage[3] = {0};
@@ -308,19 +308,8 @@ int main(int argc, char **argv)
         cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
 
         float commande[3] = {0.0f, 0, 0};
-#if defined(BARY_ALGO) || defined(PROP_ALGO)
 
-        // cv::circle(image,cv::Point(0,0),25,(correct_reading?cv::Scalar(0,255,0):cv::Scalar(0,0,255)),-1);
-/*cv::bitwise_and(image,image,out_red,mask_red);
-cv::bitwise_and(image,image,out_blue,mask_blue);*/
-// out = image*mask;
-// cv::threshold(image,out,)
-// cv::cvtColor(imageHSV,image,cv::COLOR_HSV2RGB);
-// cv::imshow("red",out_red);
-// cv::imshow("blue",out_blue);
 
-// float res = dirPID.update(width / 2.0f - x_red);
-// motorList[2].driver.setSpeed(motorList[2].side, std::floor(res));
 #ifdef WHATTHEPIDDOIN
         while (true)
         {
@@ -384,15 +373,10 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
             commande[2] = 0;
             break;
         }
-
+#else 
+        doLogic(commande);
 #endif
-
-        /*if (angleDeg - 90>0) {
-         commande[1] = -0.5;
-        }else {
-         commande[1] = 0.5;
-        }*/
-#endif
+        
 
         float consigneMid[3] = {0};
 
@@ -421,4 +405,10 @@ cv::bitwise_and(image,image,out_blue,mask_blue);*/
     cv::destroyAllWindows();
 #endif
     return 0;
+}
+
+
+
+void doLogic(float[3] & commande) {
+    
 }
