@@ -1,11 +1,11 @@
 #pragma once
 #include <wiringPi.h>
-
+#include <pthread.h>
 class Turret
 {
 private:
-    pthread_t phiThread;
-    pthread_t thetaThread;
+    std::pthread_t phiThread;
+    std::pthread_t thetaThread;
     void *moveTheta(void *vargp);
     void *movePhi(void *vargp);
     float maxTheta = 180;

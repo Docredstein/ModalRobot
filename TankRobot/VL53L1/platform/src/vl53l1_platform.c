@@ -8,7 +8,7 @@
 #include "vl53l1_platform.h"
 
 static int i2c_fd = -1;
-static int device_address = 0x29; // Adresse par défaut du VL53L1
+static int device_address = 0x52; // Adresse par défaut du VL53L1
 
 VL53L1_Error VL53L1_CommsInitialise(VL53L1_Dev_t *pdev, uint8_t comms_type, uint16_t comms_speed_khz)
 {

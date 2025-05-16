@@ -9,7 +9,8 @@ Turret::Turret(int pinTheta,int pinPhi, float maxTheta, float maxPhi) {
     this->phi=0;
     this->maxTheta=maxTheta;
     this->maxPhi=maxPhi;
-
+    pthread_create(&phiThread, NULL, this->movePhi);
+    pthread_create(&thetaThread, NULL, this->moveTheta);
 
 }
 void Turret::~Turret() {
@@ -17,10 +18,10 @@ void Turret::~Turret() {
     digitalWrite(pinPhi, LOW);
     pinMode(pinTheta, INPUT);
     pinMode(pinPhi, INPUT);
-    p_thread_cancel(phiThread);
-    p_thread_cancel(thetaThread);
-    p_thread_join(phiThread, NULL);
-    p_thread_join(thetaThread, NULL);
+    pthread_cancel(phiThread);
+    pthread_cancel(thetaThread);
+    pthread_join(phiThread, NULL);
+    pthread_join(thetaThread, NULL);
 }
     
 void Turret::move(float theta,float phi){

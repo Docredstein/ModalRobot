@@ -1,3 +1,19 @@
 {
-    "cmake.sourceDirectory": "D:/cours/X_2A/modal/ModalRobot/TankRobot"
+    "cmake.sourceDirectory": "D:/cours/X_2A/modal/ModalRobot/TankRobot",
+    "files.associations": {
+        "vl53l1_api_core.h": "c",
+        "vl53l1_api_strings.h": "c",
+        "vl53l1_preset_setup.h": "c",
+        "vl53l1_def.h": "c",
+        "vl53l1_ll_def.h": "c",
+        "vl53l1_register_structs.h": "c",
+        "vl53l1_hist_structs.h": "c",
+        "cmath": "cpp",
+        "cstddef": "cpp",
+        "cstdint": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "type_traits": "cpp",
+        "xtr1common": "cpp"
+    }
 }

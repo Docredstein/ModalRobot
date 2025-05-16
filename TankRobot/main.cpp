@@ -8,6 +8,8 @@
 #include "Encoder.hpp"
 #include <signal.h>
 #include "config.h"
+#include "Turret.hpp"
+#include "vl53l1_api.h"
 // constexpr float pi = 3.1415;
 /*
 uint8_t lastphase[3] = {0, 0, 0};
@@ -16,7 +18,12 @@ long Position[3] = {0, 0, 0};
 int ENC_A[3] = {1, 21, 3};
 int ENC_B[3] = {24, 22, 4};
 float lastCommandAfterPID[3] = {0};
+
 Encoder Encoderlist[3];
+Turret turret;
+VL53L1_Dev_t Sensor;
+
+
 float angle = 0;
 float angleDeg = 0;
 int width = 1280;
@@ -227,12 +234,14 @@ void displayAngle(float angle, int width)
 
 int main(int argc, char **argv)
 {
+
     signal(SIGINT, stop);
 
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
-
+    turret = Turret(5, 6);
+    VL53L1_DataInit(&Sensor);
 #ifdef WHATTHEMOTORDOIN
     while (true)
     {
@@ -410,5 +419,13 @@ int main(int argc, char **argv)
 
 
 void doLogic(float[3] & commande) {
-    
+    vl53l1_RangingMeasurementData_t measure;
+    VL53L1_ll_version_t version;
+    VL53L1_get_version(&Sensor,&version)
+    std::cout<<version.ll_major<<"."<<version.ll_minor<<"."<<version.ll_build<<std::endl;
+    turret.move(0, 0);
+    delay(1000);
+    turret.move(90, 180);
+    delay(1000);
+
 }
