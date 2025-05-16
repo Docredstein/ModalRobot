@@ -17,6 +17,8 @@ add_subdirectory(./MotorControl)
 add_subdirectory(./PID)
 add_subdirectory(./Encoder)
 add_subdirectory(./Holonomic)
+add_subdirectory(./VL53L1)
+add_subdirectory(./Turret)
 add_executable(Tank main.cpp)
 
 #target_link_libraries(testVideo PRIVATE MotorControl)
