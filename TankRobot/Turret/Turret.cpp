@@ -51,7 +51,7 @@ void Turret::moveTheta() {
         else {
             digitalWrite(pinTheta, HIGH);
         }
-        delayMicroseconds(100);
+        delayMicroseconds(10);
     }
 }
 void Turret::movePhi() {
@@ -67,6 +67,6 @@ void Turret::movePhi() {
         else {
             digitalWrite(pinPhi, HIGH);
         }
-        delayMicroseconds(100);
+        delayMicroseconds(10);
     }
 }
