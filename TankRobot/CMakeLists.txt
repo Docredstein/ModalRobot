@@ -1,7 +1,7 @@
-cmake_policy(SET CMP0048 NEW)
-project(testVideo VERSION 1.0.1)
-cmake_minimum_required(VERSION 3.0.0)
 
+cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.10.0)
+project(testVideo VERSION 1.0.1)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_GENERATOR Ninja)
 unset (DEBUG_SCREEN)
@@ -17,8 +17,8 @@ add_subdirectory(./MotorControl)
 add_subdirectory(./PID)
 add_subdirectory(./Encoder)
 add_subdirectory(./Holonomic)
-add_executable(testVideo main.cpp)
+add_executable(Tank main.cpp)
 
 #target_link_libraries(testVideo PRIVATE MotorControl)
-target_link_libraries(testVideo -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic -lwiringPi)
+target_link_libraries(Tank -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic -lwiringPi)
 
