@@ -1,5 +1,5 @@
-/build/*
-/CMakeFiles/*
+*/build/*
+*/CMakeFiles/*
 CMakeFiles/*
 
 MotorControl.zip
