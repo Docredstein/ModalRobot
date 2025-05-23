@@ -1,6 +1,7 @@
 #pragma once
 #include <wiringPi.h>
 #include <pthread.h>
+#include <iostream>
 class Turret
 {
 private:
@@ -16,6 +17,7 @@ private:
 public:
     float theta, phi = 0;
     int pinTheta, pinPhi;
+    void init();
     static void *functionEntryPointTheta(void *p)
     {
         ((Turret *)p)->moveTheta();

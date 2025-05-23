@@ -1,19 +1,24 @@
 #include "Turret.hpp"
 
-Turret::Turret(int pinTheta,int pinPhi, float maxTheta, float maxPhi) {
-    this->pinTheta=pinTheta;
-    this->pinPhi=pinPhi;
+Turret::Turret(int pinTheta, int pinPhi, float maxTheta, float maxPhi)
+{
+    this->pinTheta = pinTheta;
+    this->pinPhi = pinPhi;
+    this->theta = 0;
+    this->phi = 0;
+    this->maxTheta = maxTheta;
+    this->maxPhi = maxPhi;
+}
+void Turret::init()
+{
+    std::cout << "Starting Turret" << std::endl;
     pinMode(pinTheta, OUTPUT);
     pinMode(pinPhi, OUTPUT);
-    this->theta=0;
-    this->phi=0;
-    this->maxTheta=maxTheta;
-    this->maxPhi=maxPhi;
-    pthread_create(&phiThread, NULL, Turret::functionEntryPointPhi,this);
-    pthread_create(&thetaThread, NULL, Turret::functionEntryPointTheta,this);
-
+    pthread_create(&phiThread, NULL, Turret::functionEntryPointPhi, this);
+    pthread_create(&thetaThread, NULL, Turret::functionEntryPointTheta, this);
 }
-Turret::~Turret() {
+Turret::~Turret()
+{
     digitalWrite(pinTheta, LOW);
     digitalWrite(pinPhi, LOW);
     pinMode(pinTheta, INPUT);
@@ -23,48 +28,65 @@ Turret::~Turret() {
     pthread_join(phiThread, NULL);
     pthread_join(thetaThread, NULL);
 }
-    
-void Turret::move(float theta,float phi){
-    if (theta>maxTheta) {
-        theta=maxTheta;
-    } else if (theta<0) {
-        theta=0;
+
+void Turret::move(float theta, float phi)
+{
+    if (theta > maxTheta)
+    {
+        theta = maxTheta;
     }
-    if (phi>maxPhi) {
-        phi=maxPhi;
-    } else if (phi<0) {
-        phi=0;
+    else if (theta < 0)
+    {
+        theta = 0;
     }
-    this->theta=theta;
-    this->phi=phi;
+    if (phi > maxPhi)
+    {
+        phi = maxPhi;
+    }
+    else if (phi < 0)
+    {
+        phi = 0;
+    }
+    this->theta = theta;
+    this->phi = phi;
 }
-void *  Turret::moveTheta() {
-    while (true) {
-        int upTime = (int)((theta/maxTheta)*1000)+1000;
-        if (micros()- lastTickTheta>upTime) {
+void *Turret::moveTheta()
+{
+    while (true)
+    {
+        int upTime = (int)((theta / maxTheta) * 1000) + 1000;
+        if (micros() - lastTickTheta > upTime)
+        {
             digitalWrite(pinTheta, LOW);
-            
-        } else if (micros()- lastTickTheta>20000) {
+        }
+        else if (micros() - lastTickTheta > 20000)
+        {
             digitalWrite(pinTheta, HIGH);
             lastTickTheta = micros();
         }
-        else {
+        else
+        {
             digitalWrite(pinTheta, HIGH);
         }
         delayMicroseconds(10);
     }
 }
-void * Turret::movePhi() {
-    while (true) {
-        int upTime = (int)((phi/maxPhi)*1000)+1000;
-        if (micros()- lastTickPhi>upTime) {
+void *Turret::movePhi()
+{
+    while (true)
+    {
+        int upTime = (int)((phi / maxPhi) * 1000) + 1000;
+        if (micros() - lastTickPhi > upTime)
+        {
             digitalWrite(pinPhi, LOW);
-            
-        } else if (micros()- lastTickPhi>20000) {
+        }
+        else if (micros() - lastTickPhi > 20000)
+        {
             digitalWrite(pinPhi, HIGH);
             lastTickPhi = micros();
         }
-        else {
+        else
+        {
             digitalWrite(pinPhi, HIGH);
         }
         delayMicroseconds(10);
