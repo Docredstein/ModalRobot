@@ -22,5 +22,5 @@ add_subdirectory(./Turret)
 add_executable(Tank main.cpp)
 
 #target_link_libraries(testVideo PRIVATE MotorControl)
-target_link_libraries(Tank -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic -lwiringPi)
+target_link_libraries(Tank -llccv ${OpenCV_LIBS} MotorControl PID Encoder Holonomic VL53L1 Turret -lwiringPi)
 

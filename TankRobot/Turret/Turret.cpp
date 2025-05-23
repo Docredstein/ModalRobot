@@ -9,11 +9,11 @@ Turret::Turret(int pinTheta,int pinPhi, float maxTheta, float maxPhi) {
     this->phi=0;
     this->maxTheta=maxTheta;
     this->maxPhi=maxPhi;
-    pthread_create(&phiThread, NULL, this->movePhi);
-    pthread_create(&thetaThread, NULL, this->moveTheta);
+    pthread_create(&phiThread, NULL, Turret::functionEntryPointPhi,this);
+    pthread_create(&thetaThread, NULL, Turret::functionEntryPointTheta,this);
 
 }
-void Turret::~Turret() {
+Turret::~Turret() {
     digitalWrite(pinTheta, LOW);
     digitalWrite(pinPhi, LOW);
     pinMode(pinTheta, INPUT);
@@ -38,7 +38,7 @@ void Turret::move(float theta,float phi){
     this->theta=theta;
     this->phi=phi;
 }
-void Turret::moveTheta() {
+void *  Turret::moveTheta() {
     while (true) {
         int upTime = (int)((theta/maxTheta)*1000)+1000;
         if (micros()- lastTickTheta>upTime) {
@@ -54,7 +54,7 @@ void Turret::moveTheta() {
         delayMicroseconds(10);
     }
 }
-void Turret::movePhi() {
+void * Turret::movePhi() {
     while (true) {
         int upTime = (int)((phi/maxPhi)*1000)+1000;
         if (micros()- lastTickPhi>upTime) {

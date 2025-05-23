@@ -10,6 +10,9 @@
 #include "config.h"
 #include "Turret.hpp"
 #include "vl53l1_api.h"
+
+#define SERVO_THETA_PIN 6
+#define SERVO_PHI_PIN 2
 // constexpr float pi = 3.1415;
 /*
 uint8_t lastphase[3] = {0, 0, 0};
@@ -240,7 +243,7 @@ int main(int argc, char **argv)
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
-    turret = Turret(5, 6);
+    turret = Turret(SERVO_THETA_PIN, SERVO_PHI_PIN);
     VL53L1_DataInit(&Sensor);
 #ifdef WHATTHEMOTORDOIN
     while (true)
@@ -418,10 +421,10 @@ int main(int argc, char **argv)
 
 
 
-void doLogic(float[3] & commande) {
-    vl53l1_RangingMeasurementData_t measure;
+void doLogic(float commande[3]) {
+    VL53L1_RangingMeasurementData_t measure;
     VL53L1_ll_version_t version;
-    VL53L1_get_version(&Sensor,&version)
+    VL53L1_get_version(&Sensor,&version);
     std::cout<<version.ll_major<<"."<<version.ll_minor<<"."<<version.ll_build<<std::endl;
     turret.move(0, 0);
     delay(1000);
