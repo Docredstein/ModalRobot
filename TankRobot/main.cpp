@@ -11,25 +11,31 @@
 #include "Turret.hpp"
 #include "vl53l1_api.h"
 
-#define SERVO_THETA_PIN 6
-#define SERVO_PHI_PIN 2
+
 // constexpr float pi = 3.1415;
 /*
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
 */
-int ENC_A[3] = {1, 21, 3};
-int ENC_B[3] = {24, 22, 4};
+extern int ENC_A[3];
+extern int ENC_B[3];
+extern int width;
+extern int height;
+extern int max_theta;
+extern int max_phi;
+
 float lastCommandAfterPID[3] = {0};
 
+
+
+
 Encoder Encoderlist[3];
-Turret turret = Turret(SERVO_THETA_PIN, SERVO_PHI_PIN);
+Turret turret = Turret(SERVO_THETA_PIN, SERVO_PHI_PIN,max_theta,max_phi);
 VL53L1_Dev_t Sensor;
 
 float angle = 0;
 float angleDeg = 0;
-int width = 1280;
-int height = 720;
+
 void EncoderHandler1() { Encoderlist[0].EncoderHandler(); }
 void EncoderHandler2() { Encoderlist[1].EncoderHandler(); }
 void EncoderHandler3() { Encoderlist[2].EncoderHandler(); }
@@ -102,7 +108,7 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {100, 150, 200};
+float consigne[3] = {0, 0, 0};
 typedef struct motorStruct
 {
     MotorControl *driver;
@@ -426,7 +432,9 @@ void doLogic(float commande[3])
     VL53L1_get_version(&Sensor, &version);
     std::cout << version.ll_major << "." << version.ll_minor << "." << version.ll_build << std::endl;
     turret.move(0, 0);
+    std::cout <<"0"<<std::endl;
     delay(1000);
-    turret.move(90, 180);
+    turret.move(180, 180);
+    std::cout <<"1"<<std::endl;
     delay(1000);
 }

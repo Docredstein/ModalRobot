@@ -2,6 +2,7 @@
 #include <wiringPi.h>
 #include <pthread.h>
 #include <iostream>
+#include <unistd.h>
 class Turret
 {
 private:

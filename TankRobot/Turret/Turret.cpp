@@ -52,6 +52,7 @@ void Turret::move(float theta, float phi)
 }
 void *Turret::moveTheta()
 {
+    nice(-50);
     while (true)
     {
         int upTime = (int)((theta / maxTheta) * 1000) + 1000;
@@ -73,11 +74,12 @@ void *Turret::moveTheta()
 }
 void *Turret::movePhi()
 {
+    nice(-50);
     std::cout << "Starting movePhi" << std::endl;
     unsigned int lastTickPhi = micros();
     while (true)
     {
-        int upTime = (int)((phi / maxPhi) * 1000) + 1000;
+        int upTime = (int)((phi / maxPhi) * 1750) + 250;//TODO: Modular
 
         if (micros() - lastTickPhi > 20000)
         {

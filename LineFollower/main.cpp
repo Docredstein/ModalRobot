@@ -120,7 +120,7 @@ void motorListInit(motorType motorlist[3])
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
-    motor1.sens = 1; // 1
+    motor1.sens = 0; // 1
 
     motorType motor2;
     motor2.driver = &driverA;
@@ -130,7 +130,7 @@ void motorListInit(motorType motorlist[3])
     motorType motor3;
     motor3.driver = &driverB;
     motor3.side = MOTORB;
-    motor3.sens = 1; // 1
+    motor3.sens = 0; // 1
 
     // swap
     motorlist[0] = motor2;
@@ -158,7 +158,7 @@ void *MotorUpdateThread(void *argv)
     {
         for (int i = 0; i < 3; i++)
         {
-            float speedVal = PIDmotor[i].update(consigne[i] - speed[i]);
+            float speedVal = PIDmotor[i].update(consigne[(i + SIDE) % 3] - speed[i]);
             speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
             speedVal += (std::abs(consigne[i]) < 150) ? sgn(consigne[i]) * FRICTION_CONSTANT : 0;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
@@ -271,19 +271,20 @@ int main(int argc, char **argv)
         delay(10000);
     }
 #endif
-    /*while (true)
+/*   while (true)
     {
         for (int i = 0; i < 3; i++)
         {
 
-                motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1)  * 100);
+            motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * 100);
+                motorList[(i+1)%3].driver->setSpeed(motorList[(i+1)%3].side, 0);
+                motorList[(i+2)%3].driver->setSpeed(motorList[(i+2)%3].side, 0);
                 std::cout<<(motorList[i].sens ? -1 : 1)  * 100<<std::endl;
 
 
             std::cout<<"Motor"<<i<<std::endl;
-
+                    delay(5000);
         }
-        delay(1000);
     }*/
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
@@ -343,10 +344,10 @@ int main(int argc, char **argv)
 
     {
         clearScreen();
-        #ifdef SHOW_MASK
+#ifdef SHOW_MASK
         out_blue.setTo(cv::Scalar(0, 0, 0));
         out_red.setTo(cv::Scalar(0, 0, 0));
-        #endif
+#endif
         /*out_red = cv::Mat::zeros(width,height,CV_8UC3);
         out_blue = cv::Mat::zeros(width,height,CV_8UC3);*/
         correct_reading = false;

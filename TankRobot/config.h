@@ -10,7 +10,20 @@ constexpr float pi = 3.1415;
 #define SPEED_AVERAGE_K 2
 
 #define FRICTION_CONSTANT 0
+
+
+#define SERVO_THETA_PIN 2
+#define SERVO_PHI_PIN 6
+
 //#define MANUAL_MODE
 //#define PROP_ALGO
 //#define WHATTHEMOTORDOIN
 //#define WHATTHEPIDDOIN
+
+
+int ENC_A[3] = {1, 21, 3};
+int ENC_B[3] = {24, 22, 4};
+int width = 1280;
+int height = 720;
+int max_theta = 180;
+int max_phi = 100;
