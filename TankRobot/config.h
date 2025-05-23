@@ -8,7 +8,7 @@ constexpr float pi = 3.1415;
 #define MOTOR_INT_LIMIT 200
 #define SPEED_CONSTANT 400
 #define SPEED_AVERAGE_K 2
-
+#define REDUCTION_RATIO 4
 #define FRICTION_CONSTANT 0
 
 

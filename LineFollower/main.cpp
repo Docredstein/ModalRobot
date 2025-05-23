@@ -13,8 +13,10 @@
 uint8_t lastphase[3] = {0, 0, 0};
 long Position[3] = {0, 0, 0};
 */
-int ENC_A[3] = {1, 21, 3};
-int ENC_B[3] = {24, 22, 4};
+/*int ENC_A[3] = {1, 21, 3};
+int ENC_B[3] = {24, 22, 4};*/
+int ENC_A[3] = {24, 22, 3};
+int ENC_B[3] = {1, 21, 4};
 float lastCommandAfterPID[3] = {0};
 Encoder Encoderlist[3];
 float angle = 0;
@@ -98,7 +100,7 @@ MotorControl driverB = MotorControl(0x0e);
 PID dirPID = PID(0.01, 0.02);
 
 PID PIDmotor[3];
-float consigne[3] = {100, 150, 200};
+float consigne[3] = {400, 600, 800};
 typedef struct motorStruct
 {
     MotorControl *driver;
@@ -158,9 +160,9 @@ void *MotorUpdateThread(void *argv)
     {
         for (int i = 0; i < 3; i++)
         {
-            float speedVal = PIDmotor[i].update(consigne[(i + SIDE) % 3] - speed[i]);
+            float speedVal = PIDmotor[i].update(REDUCTION_RATIO*consigne[(i + SIDE) % 3] - speed[i]);
             speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
-            speedVal += (std::abs(consigne[i]) < 150) ? sgn(consigne[i]) * FRICTION_CONSTANT : 0;
+            speedVal += (std::abs(consigne[i]) < 400 && std::abs(consigne[i])>5) ? sgn(consigne[i]) * FRICTION_CONSTANT : 0;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
             lastCommandAfterPID[i] = speedVal;
             motorList[i].driver->setSpeed(motorList[i].side, (motorList[i].sens ? -1 : 1) * std::floor(speedVal));
@@ -502,7 +504,7 @@ int main(int argc, char **argv)
             clearScreen();
             for (int i = 0; i < 3; i++)
             {
-                std::cout << i << " : POS=" << Encoderlist[i].pos << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
+                std::cout << i << " : POS=" << Encoderlist[i].pos << " COMMANDE)"<< consigne[i] << " ;SPEED=" << speed[i] << " ;PID=" << std::floor(lastCommandAfterPID[i]) << " ;error:" << consigne[i] - speed[i] << ";Integral :" << PIDmotor[i].getInt() << std::endl;
                 // std::cout <<"lastPos : " <<lastPos[i] <<  ";lastTime : " << lastTime<<";CurrentPos : "<<Encoderlist[i].pos<<std::endl;
             }
             delay(100);
