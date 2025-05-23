@@ -55,14 +55,14 @@ void *Turret::moveTheta()
     while (true)
     {
         int upTime = (int)((theta / maxTheta) * 1000) + 1000;
-        if (micros() - lastTickTheta > upTime)
-        {
-            digitalWrite(pinTheta, LOW);
-        }
-        else if (micros() - lastTickTheta > 20000)
+        if (micros() - lastTickTheta > 20000)
         {
             digitalWrite(pinTheta, HIGH);
             lastTickTheta = micros();
+        }
+        else if (micros() - lastTickTheta > upTime)
+        {
+            digitalWrite(pinTheta, LOW);
         }
         else
         {
@@ -73,21 +73,27 @@ void *Turret::moveTheta()
 }
 void *Turret::movePhi()
 {
+    std::cout << "Starting movePhi" << std::endl;
+    unsigned int lastTickPhi = micros();
     while (true)
     {
         int upTime = (int)((phi / maxPhi) * 1000) + 1000;
-        if (micros() - lastTickPhi > upTime)
-        {
-            digitalWrite(pinPhi, LOW);
-        }
-        else if (micros() - lastTickPhi > 20000)
+
+        if (micros() - lastTickPhi > 20000)
         {
             digitalWrite(pinPhi, HIGH);
             lastTickPhi = micros();
+            //std::cout << std::endl;
+        }
+        else if (micros() - lastTickPhi > upTime)
+        {
+            digitalWrite(pinPhi, LOW);
+            //std::cout << ".";
         }
         else
         {
             digitalWrite(pinPhi, HIGH);
+            //std::cout << "°";
         }
         delayMicroseconds(10);
     }
