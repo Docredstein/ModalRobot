@@ -45,12 +45,30 @@
 
 // Introduction
 #heading(level: 1, numbering: none)[Introduction]
+Je suis arrivé dans ce modal un peu par hasard. Au départ je m'étais inscrit pour le ModAL FPGA car c'était quelque chose qui me semble très versatile mais un peu obscur pour le découvrir en auto-didacte. C'est donc avec surprise que j'apprend la disparition de ce ModAL dans une fusion avec le ModAL de Robotique. Au final, ça ne m'a pas trop géné car c'était mon deuxième voeu. J'avais une légère expérience en robotique. En effet, j'ai participé de 2012 à 2021 aux compétitions de robotique junior (robot radioguidés) de planêtes sciences et j'aide encore marginalement dans l'équipe familiale. J'avais donc une certaine connaissance des composants et de leurs utilisations mais je ne connaissais presque rien dans le contrôle et la commande haut niveau. Mon objectifs dans ce cours était donc d'apprendre cette partie pour pouvoir ensuite l'appliquer au Binet X-Robot qui est en manque crucial de RH et de compétence. 
+#linebreak()
+D'un point de vue plus académiques, l'objectif final est de réaliser un robot "tank" pour pouvoir travailler sur l'anticipation de mouvement de l'adversaire. l'objectif était donc de réussir à pointer une cible sur l'adversaire tout en se déplaçant dans un environnement encombré. Pour cela nous avions à notre disposition : #list(
+  [Roues holonomes],
+  [Moteurs avec encodeurs],
+  [Raspberry pi 4],
+  [Cartes moteurs I²C Groves],
+  [Caméra grand angle 5MP],
+  [Servomoteurs]
+)
+Cependant, avant de réaliser le projet final il est nécessaire de réaliser un suivi de ligne fonctionnel. Dans ce sens j'ai passé (malheureusement) la majeur partie des séances (8/10) sur ce projet initial.
+#figure(
+image("./source/global_low.jpg",fit: "contain",width:60% ),
+caption: "Vue d'ensemble du robot final",
+)
+
+
+
 
 #pagebreak()
 
 // Here goes the main content
 = Base commune
-
+Dans l'optique de pouvoir réutiliser un maximum de composants (tant mécaniques que logiciels), 
 == Encodeurs
 
 == PID
@@ -69,9 +87,8 @@
 
 #pagebreak()
 
-= Troisième axe
-Parce qu'on a beaucoup de choses à dire et qu'on en a gros.
-
+= Robot tank
+@PP
 #pagebreak()
 
 
@@ -81,10 +98,13 @@ Parce qu'on a beaucoup de choses à dire et qu'on en a gros.
 
 // Bibliography (if necessary)
 // #pagebreak()
-// #bibliography("path-to-file.bib")
+// #bibliography("path-to-file.bib")+
+#pagebreak()
+#bibliography("./source/bibliography.bib")
 
 // Annexe
-#pagebreak()
+#pagebreak() 
 #show: template.heading.appendix.with(title: "Annexe")
 = Fiche d'évaluation du stagiaire
 Yeah j'ai eu que des A partout trop bien, je suis un.e super stagiaire.
+
