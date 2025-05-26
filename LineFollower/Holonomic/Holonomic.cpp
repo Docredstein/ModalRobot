@@ -67,7 +67,7 @@ namespace Holonomic
         float avant[3] = {0, -1, 1};
         float droite[3] = {-1, 1 / sqrt2, 1 / sqrt2};
         float rotation[3] = {1, 1, 1};
-        normalize(input);
+        scale(input);
         float norme = 0;
         for (int i = 0; i < 3; i++)
         {
@@ -77,7 +77,6 @@ namespace Holonomic
             }
             norme += output[i] * output[i];
         }
-
         scale(output);
         /*
         norme = std::sqrt(norme);

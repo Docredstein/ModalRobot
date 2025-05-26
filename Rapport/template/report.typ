@@ -108,21 +108,47 @@ J'ai ensuite créé une librairie CMake générique pour les PID, c'est-à-dire 
 #figure(
   image("./source/asservissement.png",fit:"contain"),
   caption: "Asservissement de chaque moteur"
-)
+)<asservissement>
 == Roues holonomes
-Les roues holonomes sont des roues qui n'imposent pas de contrainte normale à la roue. C'est dire qu'elle glisse sur la direction normale à la roue. On peut donc considérer uniquement comme un ajout de vecteur (il faut cependant )
-
+Les roues holonomes sont des roues qui n'imposent pas de contrainte normale à la roue. C'est dire qu'elle glisse sur la direction normale à la roue. On peut donc considérer uniquement comme un ajout de vecteur (il faut cependant prendre en compte que chaque roue adhère sur la direction tangentielle). Le robot est en liaison équivalente à une liaison plane, il y a donc 3 dégrés de libertés or on a 3 moteurs donc on pourrait écrire les équations directe du mouvement pour ensuite tenter des les inverser. Cependant ici, vu le faible nombre de moteur, j'ai choisi d'exhiber 3 vecteurs de bases du mouvement (@VecteurMouvement). Par la suite, il est donc possible de partir directement des vecteurs du mouvement désirés. Pour autant, les moteurs ont une valeur maximale de vitesse de rotation possible. Il faut donc limiter le vecteur de commande de sorte à ce que chacune de ses composantes reste inférieures à la limite. En pratique, j'ai réalisé la transformation avec des flottants $in [-1,1]$. j'ai exploré 3 méthodes : #list(
+  [Normaliser : $bold(t_("out")) =frac(bold(t_("in")),norm(bold(t_("in"))) )$ on a donc $norm(bold(t_("out")))=1$ donc toute les composantes $in [-1,1]$],
+  [Tronquer : pour tout composante $t_"in" in bold(t_"in")$, $t_"out" = min(max(t_"in",-1),1)$ donc $-1 lt.eq t_"out" lt.eq 1$],
+  [Mettre à l'échelle : soit $t_"max" in bold(t_"in")$ tel que $forall t in t_"in", abs(t_"max") gt.eq abs(t)$ alors $bold(t_"out") = frac(bold(t_"in"),abs(t_"max"))$]
+)
+L'avantage de tronquer, c'est que le calcul est extrêmement rapide mais on perd de la direction originelle du vecteur. La normalisation permet de conserver la direction mais réduit plus les composantes que nécessaire (on est dans la boule unitaire) alors que mettre à l'échelle permet de conserver la direction (en étant dans le cube unité complet). Au final, l'algorithme choisi est donc : 
+ ```cpp float avant[3] = {0, -1, 1};
+        float droite[3] = {-1, 1 / sqrt2, 1 / sqrt2};
+        float rotation[3] = {1, 1, 1};
+        scale(input);
+        for (int i = 0; i < 3; i++)
+        {
+            output[i] = avant[i] * input[0] + droite[i] * input[1] + rotation[i] * input[2];
+        }
+        scale(output);```
  #figure(
   image("./source/modal géométries.png",fit: "contain",width: 80%),
   caption: "Vecteurs considérés pour les roues holonomes"
- )
+ )<VecteurMouvement>
+#figure(
+  image("./source/scaling.png",fit:"contain", width: 80%),
+  caption: "Les différentes méthodes de projections explorées"
+)
 
-
-
+== Carte Moteur
+Cette section est courte car l'utilisation est relativement simple mais a demandé du temps de calibration. En effet, les cartes recoivents 2 bytes pour les vitesses et 1 bytes pour les directions. Cependant, les valeurs semblent aléatoires : ```cpp uint8_t DirLut[4] = {0x0a,0x06,0x09,0x05};
+    wiringPiI2CWriteReg16(this->m_fd,0xaa,DirLut[(dirA+2*dirB)]);```
+et pour la vitesse : ```cpp this->setDirection(this->_M1_direction,this->_M2_direction);
+    wiringPiI2CWriteReg16(this->m_fd,0x82,((uint16_t)this->_speed1)<<8|this->_speed2);```
+On peut donc remarquer que c'est ici qu'intervient la limitation à 8 bit par moteur qui était affiché sur la @asservissement
 #pagebreak()
 
 
 = Robot suiveur
+== Estimation du chemin 
+L
+== Choix entre bleu et rouge
+== Loi de commande
+
 
 
 
