@@ -145,16 +145,34 @@ On peut donc remarquer que c'est ici qu'intervient la limitation à 8 bit par mo
 
 = Robot suiveur
 == Estimation du chemin 
-L
+Le chemin est un scotch rouge ou bleu faisant un cycle sans embranchement. On peut donc essayer d'estimer le chemin en ne prennant que le barycentre des pixels de la bonne couleur. Dans un premiers temps j'ai essayé de prendre le barycentre bleu et rouge sur toute l'image mais le résultat était trop influencé par les pixels proches de la caméra et le robot oscillait. J'ai donc séparé l'image en 2, une partie supérieure et inférieure sur lesquels on calcule le barycentre des 2 couleurs. Pour cela, on retourne l'image et on convertit l'image de RGB vers HSV pour avoir accès à la teinte qui est plus facile à interprêter. Ensuite, on filtre en ne gardant que les pixels entre 2 bornes. Enfin on calcule les moments pour enfin avoir les barycentres. les moments sont $M_"ij"=sum_(p in "image")(x^i y^j p)$ donc $bold("bary")=mat(frac(M_"10",M_"00");frac(M_"01",M_"00"))$
+#figure(
+  image("./source/filtre.png",fit: "contain", width: 60%),
+  caption: "Filtre appliqué"
+)
 == Choix entre bleu et rouge
+Il faut ensuite choisir s'il faut suivre les barycentres bleus et rouges. Pour cela, j'ai considéré qu'on pouvait estimer comme fiable s'il y a plus de 2% de pixel de l'image sont de cette couleurs. Il est nécessaire d'avoir un hysterésis pour ne pas être sensible à un verrouillage bref d'un obstacle. Au final, j'ai utilisé une machine à 3 états : Soit on suis le rouge, soit le bleu soit le robot est perdu.
+#figure(
+  image("./source/logique.png",fit: "contain", width: 60%),
+  caption: "Logique de choix des couleurs"
+)
 == Loi de commande
-
+Le robot a maintenant 2 barycentres sélectionnés qu'il doit suivre. Il y a 3 degrés de libertés à commander. j'ai choisi de mettre directement la commande "avancer" à 0.5 pour donner une direction globale. Si le robot est perdu il tourne en alternant le sens de rotation pour parcourir un arc de plus en plus grand pour trouver le chemin le plus proche de la direction initiale. Dans le cas contraire, on vérifie si on un verrouillage proche alors on prend en compte ce barycentre et on applique un PID pour maintenir le barycentre au centre horizontalement. D'autre part, si il y a un verrouillage loin valide, alors on le prend en compte et on calcule l'angle entre le centre du bord bas de l'image et le barycentre avec l'horizontale. On applique alors un PID sur l'angle pour le maintenir à 90°. 
+Pour résumer en un schéma : 
+#figure(
+  image("./source/Schéma ligne.png",fit: "contain",width: 80%),
+  caption: "Schéma de la loi de commande"
+)
 
 
 
 #pagebreak()
 
 = Robot tank
+== Ajout d'une tourelle
+== état de l'art
+
+
 @PP
 #pagebreak()
 
