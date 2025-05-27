@@ -17,6 +17,7 @@ public:
     ~PID();
    float update(float error);
    float getInt();
+   void resetAcc();
 };
 
 

@@ -5,3 +5,5 @@ CMakeFiles/*
 MotorControl.zip
 TankRobot/VL53L1/build/*
 build/*
+.git_old/*
+.git_old/COMMIT_EDITMSG

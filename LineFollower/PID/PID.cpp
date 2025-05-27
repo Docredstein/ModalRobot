@@ -30,11 +30,14 @@ float PID::update(float const error) {
     }
 
     float out = m_Kp*error+m_Ki*m_accumulator+m_Kd*(error - m_lastError)/(time-m_lastMicros);
-    m_accumulator = m_accumulator/std::exp((time-m_lastMicros)*20*1e-6);
+    //m_accumulator = m_accumulator/std::exp((time-m_lastMicros)*20*1e-6); mauvaise idée
     m_lastError=error;
     m_lastMicros=time;
     return out;
 
     
 
+}
+void PID::resetAcc() {
+    m_accumulator = 0;
 }

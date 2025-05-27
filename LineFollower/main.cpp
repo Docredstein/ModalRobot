@@ -15,6 +15,7 @@ long Position[3] = {0, 0, 0};
 */
 /*int ENC_A[3] = {1, 21, 3};
 int ENC_B[3] = {24, 22, 4};*/
+int foundTime = 0;
 int ENC_A[3] = {24, 22, 3};
 int ENC_B[3] = {1, 21, 4};
 float lastCommandAfterPID[3] = {0};
@@ -160,7 +161,10 @@ void *MotorUpdateThread(void *argv)
     {
         for (int i = 0; i < 3; i++)
         {
-            float speedVal = PIDmotor[i].update(REDUCTION_RATIO*consigne[(i + SIDE) % 3] - speed[i]);
+            if (std::abs(consigne[i]) <5) {
+                PIDmotor[i].resetAcc();
+            }
+            float speedVal = PIDmotor[i].update(REDUCTION_RATIO*consigne[i] - speed[i]);
             speedVal = speedVal + consigne[i] * MOTOR_CONSTANT;
             speedVal += (std::abs(consigne[i]) < 400 && std::abs(consigne[i])>5) ? sgn(consigne[i]) * FRICTION_CONSTANT : 0;
             // std::cout<<"command value of"<<i<<" = " << std::floor(speedVal) << std::endl;
@@ -251,7 +255,7 @@ int main(int argc, char **argv)
     motorListInit(motorList);
     wiringPiSetup();
     EncoderInit();
-
+//motorList[0].driver->setSpeed(motorList[0].side, 255);
 #ifdef WHATTHEMOTORDOIN
     while (true)
     {
@@ -291,7 +295,7 @@ int main(int argc, char **argv)
     pthread_create(&speedThread, NULL, &getSpeed, NULL);
     pthread_create(&motorThread, NULL, &MotorUpdateThread, NULL);
     // pthread_create(&averageCalc, NULL, &speedAverageCalc, NULL);
-
+    
 #ifdef BARY_ALGO
     pthread_create(&consigneThread, NULL, &DroiteUpdateThread, NULL);
 #endif
@@ -558,8 +562,16 @@ int main(int argc, char **argv)
         }*/
         // L'idée, c'est de centrer juste l'x en bas et de s'orienter pour que l'angle soit de ~90°
         if (!lost)
-        {
-            lostTime = -1;
+        {   if (foundTime == -1) {
+            foundTime = millis();
+            } 
+        
+            if (millis() - foundTime >= 200 && foundTime > 0)
+            {
+                lostTime = -1;
+                foundTime = -1;
+            }
+            
             commande[0] = 0.5;
             if (valid_lock_near)
             {
@@ -580,6 +592,9 @@ int main(int argc, char **argv)
         }
         else
         {
+            if (foundTime > 0 ) {
+                foundTime = -1;
+            }
             if (lostTime < 0)
             {
                 lostTime = millis();
@@ -663,7 +678,7 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < 3; i++)
         {
-            consigne[i] = (int)(SPEED_CONSTANT * consigneMid[i]);
+            consigne[(i+SIDE)%3] = (int)(SPEED_CONSTANT * consigneMid[i]);
         }
         std::cout << angleDeg << std::endl;
         displayAngle(angle, 20);
