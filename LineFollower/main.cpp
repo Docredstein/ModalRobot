@@ -122,7 +122,7 @@ void motorListInit(motorType motorlist[3])
     motorType motor1;
     motor1.driver = &driverA;
     motor1.side = MOTORA;
-    motor1.sens = 0; // 1
+    motor1.sens = 0; // 0
 
     motorType motor2;
     motor2.driver = &driverA;
@@ -132,7 +132,7 @@ void motorListInit(motorType motorlist[3])
     motorType motor3;
     motor3.driver = &driverB;
     motor3.side = MOTORB;
-    motor3.sens = 0; // 1
+    motor3.sens = 0; // 0
 
     // swap
     motorlist[0] = motor2;
@@ -659,7 +659,7 @@ int main(int argc, char **argv)
 
         float consigneMid[3] = {0};
 
-        Holonomic::Convert(commande, consigneMid, true);
+        Holonomic::Convert(commande, consigneMid, false);
 
         for (int i = 0; i < 3; i++)
         {

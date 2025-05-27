@@ -1,5 +1,6 @@
 #pragma once
 #include <wiringPi.h>
+#include <cmath>
 class PID
 {
 private:
